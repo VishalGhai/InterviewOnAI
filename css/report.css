@@ -1,0 +1,340 @@
+/* Report Container */
+.report-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+}
+
+.report-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.report-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.report-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+/* Grade Section */
+.grade-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+}
+
+.grade-circle {
+    position: relative;
+    width: 140px;
+    height: 140px;
+}
+
+.grade-circle svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.grade-bg {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 6;
+}
+
+.grade-fill {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 263.9;
+    stroke-dashoffset: 263.9;
+    transition: stroke-dashoffset 1.2s ease, stroke 0.5s ease;
+}
+
+.grade-inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.grade-letter {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.grade-pct {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.15rem;
+}
+
+/* Breakdown */
+.breakdown-section {
+    margin-bottom: 2rem;
+}
+
+.breakdown-section h2 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.breakdown-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.breakdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.breakdown-label {
+    width: 100px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.breakdown-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.breakdown-bar {
+    height: 100%;
+    border-radius: 4px;
+    width: 0%;
+    transition: width 1s ease;
+}
+
+.breakdown-bar.low { background: #ef4444; }
+.breakdown-bar.mid { background: #f59e0b; }
+.breakdown-bar.high { background: #22c55e; }
+
+.breakdown-value {
+    width: 40px;
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+/* Insights */
+.insights-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.insight-card {
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+}
+
+.insight-card h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+}
+
+.insight-item {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    padding: 0.3rem 0;
+    line-height: 1.5;
+}
+
+.insight-item strong {
+    color: var(--text);
+}
+
+/* Questions Accordion */
+.questions-section {
+    margin-bottom: 2rem;
+}
+
+.questions-section h2 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.q-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    background: var(--surface);
+}
+
+.q-header {
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 500;
+    user-select: none;
+    transition: background var(--transition);
+}
+
+.q-header:hover {
+    background: var(--bg);
+}
+
+.q-number {
+    color: var(--accent);
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.q-score-badge {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.q-score-badge.low { background: #fef2f2; color: #dc2626; }
+.q-score-badge.mid { background: #fffbeb; color: #d97706; }
+.q-score-badge.high { background: #f0fdf4; color: #16a34a; }
+
+.dark .q-score-badge.low { background: #1c1111; }
+.dark .q-score-badge.mid { background: #1c1a0e; }
+.dark .q-score-badge.high { background: #0e1c11; }
+
+.q-body {
+    display: none;
+    padding: 0 1rem 1rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+}
+
+.q-body.open {
+    display: block;
+}
+
+.q-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.q-text {
+    color: var(--text);
+    white-space: pre-wrap;
+}
+
+.q-mini-scores {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.q-mini-score {
+    font-size: 0.72rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+}
+
+.q-arrow {
+    transition: transform var(--transition);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.q-item.open .q-arrow {
+    transform: rotate(180deg);
+}
+
+/* Actions */
+.actions-section {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding-top: 1rem;
+}
+
+.btn-secondary {
+    padding: 0.85rem 1.5rem;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: all var(--transition);
+}
+
+.btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.actions-section .btn-primary {
+    text-decoration: none;
+    text-align: center;
+    display: inline-block;
+}
+
+/* Print */
+@media print {
+    body { background: #fff; }
+    .actions-section { display: none; }
+    .report-container { max-width: 100%; }
+    .q-body { display: block !important; }
+    .grade-fill { transition: none; }
+    .breakdown-bar { transition: none; }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .insights-section {
+        grid-template-columns: 1fr;
+    }
+
+    .report-container {
+        padding: 1.5rem 1rem 2rem;
+    }
+
+    .grade-circle {
+        width: 110px;
+        height: 110px;
+    }
+
+    .grade-letter {
+        font-size: 1.8rem;
+    }
+}

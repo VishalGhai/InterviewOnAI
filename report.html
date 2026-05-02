@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Card — InterviewOnAI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/report.css">
+</head>
+<body>
+    <div class="report-container">
+        <header class="report-header">
+            <h1>Interview Report Card</h1>
+            <p id="reportSubtitle" class="report-subtitle"></p>
+        </header>
+
+        <!-- Overall Grade -->
+        <section class="grade-section">
+            <div class="grade-circle" id="gradeCircle">
+                <svg viewBox="0 0 100 100">
+                    <circle class="grade-bg" cx="50" cy="50" r="42" />
+                    <circle class="grade-fill" id="gradeFill" cx="50" cy="50" r="42" />
+                </svg>
+                <div class="grade-inner">
+                    <span class="grade-letter" id="gradeLetter">-</span>
+                    <span class="grade-pct" id="gradePct">0%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Parameter Breakdown -->
+        <section class="breakdown-section">
+            <h2>Performance Breakdown</h2>
+            <div class="breakdown-grid" id="breakdownGrid"></div>
+        </section>
+
+        <!-- Strengths & Improvements -->
+        <section class="insights-section">
+            <div class="insight-card strengths">
+                <h3>💪 Strengths</h3>
+                <div id="strengthsList"></div>
+            </div>
+            <div class="insight-card improvements">
+                <h3>📈 Areas to Improve</h3>
+                <div id="improvementsList"></div>
+            </div>
+        </section>
+
+        <!-- Per-Question Breakdown -->
+        <section class="questions-section">
+            <h2>Question-by-Question</h2>
+            <div id="questionsAccordion"></div>
+        </section>
+
+        <!-- Actions -->
+        <section class="actions-section">
+            <a href="index.html" class="btn-primary">Try Again</a>
+            <a href="index.html" class="btn-secondary">New Topic</a>
+        </section>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/report.js"></script>
+</body>
+</html>

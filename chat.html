@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Session — InterviewOnAI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chat.css">
+</head>
+<body>
+    <div class="chat-layout">
+        <!-- Chat Area -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <a href="index.html" class="back-btn">← Back</a>
+                <div class="session-info">
+                    <span id="sessionTopic" class="session-topic"></span>
+                    <span id="progressText" class="progress-text">Question 0 / 0</span>
+                </div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="messages" id="messages"></div>
+
+            <div class="input-area">
+                <textarea id="answerInput" placeholder="Type your answer..." rows="3" disabled></textarea>
+                <button id="submitBtn" class="btn-primary" disabled>Submit</button>
+            </div>
+        </div>
+
+        <!-- Metrics Sidebar -->
+        <aside class="metrics-sidebar" id="metricsSidebar">
+            <h2 class="metrics-title">Your Performance</h2>
+            
+            <div class="overall-score" id="overallScore">
+                <div class="score-circle">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="score-bg" cx="50" cy="50" r="42" />
+                        <circle class="score-fill" id="overallCircle" cx="50" cy="50" r="42" />
+                    </svg>
+                    <span class="score-value" id="overallValue">0%</span>
+                </div>
+                <span class="score-label">Overall</span>
+            </div>
+
+            <div class="params-list" id="paramsList">
+                <div class="param-item" data-param="accuracy">
+                    <div class="param-header">
+                        <span class="param-name">Accuracy</span>
+                        <span class="param-value">0%</span>
+                    </div>
+                    <div class="param-bar"><div class="param-fill"></div></div>
+                </div>
+                <div class="param-item" data-param="depth">
+                    <div class="param-header">
+                        <span class="param-name">Depth</span>
+                        <span class="param-value">0%</span>
+                    </div>
+                    <div class="param-bar"><div class="param-fill"></div></div>
+                </div>
+                <div class="param-item" data-param="clarity">
+                    <div class="param-header">
+                        <span class="param-name">Clarity</span>
+                        <span class="param-value">0%</span>
+                    </div>
+                    <div class="param-bar"><div class="param-fill"></div></div>
+                </div>
+                <div class="param-item" data-param="relevance">
+                    <div class="param-header">
+                        <span class="param-name">Relevance</span>
+                        <span class="param-value">0%</span>
+                    </div>
+                    <div class="param-bar"><div class="param-fill"></div></div>
+                </div>
+                <div class="param-item" data-param="practicalKnowledge">
+                    <div class="param-header">
+                        <span class="param-name">Practical</span>
+                        <span class="param-value">0%</span>
+                    </div>
+                    <div class="param-bar"><div class="param-fill"></div></div>
+                </div>
+            </div>
+
+            <!-- Keyword Exclusions (JD mode only) -->
+            <div class="keyword-section" id="keywordSection" style="display:none;">
+                <h3 class="keyword-title">Exclude Topics</h3>
+                <p class="keyword-hint">Click to exclude from questions</p>
+                <div class="keyword-chips" id="keywordChips"></div>
+                <div class="keyword-loading" id="keywordLoading">Extracting keywords...</div>
+            </div>
+
+            <div class="questions-answered" id="questionsAnswered">
+                0 of 0 answered
+            </div>
+        </aside>
+    </div>
+
+    <!-- Motivation Popup Overlay -->
+    <div class="motivation-overlay" id="motivationOverlay">
+        <div class="motivation-popup" id="motivationPopup">
+            <div class="motivation-emoji" id="motivationEmoji"></div>
+            <h2 class="motivation-title" id="motivationTitle"></h2>
+            <p class="motivation-message" id="motivationMessage"></p>
+            <div class="confetti-container" id="confettiContainer"></div>
+        </div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="config.js"></script>
+    <script src="js/gemini.js"></script>
+    <script src="js/metrics.js"></script>
+    <script src="js/motivation.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+</html>

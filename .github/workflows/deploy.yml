@@ -1,0 +1,54 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inject API key
+        if: ${{ vars.GEMINI_API_KEY != '' || secrets.GEMINI_API_KEY != '' }}
+        run: |
+          KEY="${{ secrets.GEMINI_API_KEY }}"
+          if [ -z "$KEY" ]; then KEY="${{ vars.GEMINI_API_KEY }}"; fi
+          cat > config.js << 'SCRIPT'
+          const _INJECTED_KEY = "__KEY_PLACEHOLDER__";
+          const GEMINI_API_KEY = localStorage.getItem('gemini-api-key')
+              || (_INJECTED_KEY !== "YOUR_GEMINI_API_KEY_HERE" ? _INJECTED_KEY : '');
+          SCRIPT
+          sed -i "s|__KEY_PLACEHOLDER__|${KEY}|g" config.js
+
+      - name: Create default config if not injected
+        run: |
+          if [ ! -f config.js ]; then
+            cat > config.js << 'SCRIPT'
+          const _INJECTED_KEY = "YOUR_GEMINI_API_KEY_HERE";
+          const GEMINI_API_KEY = localStorage.getItem('gemini-api-key')
+              || (_INJECTED_KEY !== "YOUR_GEMINI_API_KEY_HERE" ? _INJECTED_KEY : '');
+          SCRIPT
+          fi
+
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

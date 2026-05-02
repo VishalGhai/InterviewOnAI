@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterviewOnAI</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>InterviewOn<span class="accent">AI</span></h1>
+            <p class="subtitle">AI-powered interview preparation</p>
+        </header>
+
+        <main class="landing">
+            <section class="jd-section">
+                <textarea id="jdInput" placeholder="Paste your job description here..." rows="6"></textarea>
+                
+                <div class="config-row">
+                    <div class="config-item">
+                        <label for="questionCount">Questions</label>
+                        <select id="questionCount">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <label for="difficulty">Difficulty</label>
+                        <select id="difficulty">
+                            <option value="easy">Easy</option>
+                            <option value="easy-medium" selected>Easy → Medium</option>
+                            <option value="easy-medium-hard">Easy → Medium → Hard</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="startBtn" class="btn-primary">Start Interview</button>
+            </section>
+
+            <div class="divider">
+                <span>or prepare by topic</span>
+            </div>
+
+            <section class="topics-section">
+                <div class="topics-grid" id="topicsGrid"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- API Key Modal -->
+    <div class="apikey-overlay" id="apikeyOverlay">
+        <div class="apikey-modal">
+            <h2>Enter Gemini API Key</h2>
+            <p>Get a free key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a></p>
+            <input type="password" id="apikeyInput" placeholder="Paste your API key here..." autocomplete="off">
+            <button id="apikeySaveBtn" class="btn-primary">Save & Continue</button>
+        </div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
