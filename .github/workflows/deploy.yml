@@ -23,26 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Inject API key
-        if: ${{ vars.GEMINI_API_KEY != '' || secrets.GEMINI_API_KEY != '' }}
+      - name: Create config.js
+        env:
+          API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          KEY="${{ secrets.GEMINI_API_KEY }}"
-          if [ -z "$KEY" ]; then KEY="${{ vars.GEMINI_API_KEY }}"; fi
-          cat > config.js << 'SCRIPT'
-          const _INJECTED_KEY = "__KEY_PLACEHOLDER__";
-          const GEMINI_API_KEY = localStorage.getItem('gemini-api-key')
-              || (_INJECTED_KEY !== "YOUR_GEMINI_API_KEY_HERE" ? _INJECTED_KEY : '');
-          SCRIPT
-          sed -i "s|__KEY_PLACEHOLDER__|${KEY}|g" config.js
-
-      - name: Create default config if not injected
-        run: |
-          if [ ! -f config.js ]; then
-            cat > config.js << 'SCRIPT'
-          const _INJECTED_KEY = "YOUR_GEMINI_API_KEY_HERE";
-          const GEMINI_API_KEY = localStorage.getItem('gemini-api-key')
-              || (_INJECTED_KEY !== "YOUR_GEMINI_API_KEY_HERE" ? _INJECTED_KEY : '');
-          SCRIPT
+          if [ -n "$API_KEY" ]; then
+            printf 'const _INJECTED_KEY = "%s";\nconst GEMINI_API_KEY = localStorage.getItem("gemini-api-key")\n    || (_INJECTED_KEY !== "YOUR_GEMINI_API_KEY_HERE" ? _INJECTED_KEY : "");\n' "$API_KEY" > config.js
+          else
+            printf 'const _INJECTED_KEY = "YOUR_GEMINI_API_KEY_HERE";\nconst GEMINI_API_KEY = localStorage.getItem("gemini-api-key")\n    || (_INJECTED_KEY !== "YOUR_GEMINI_API_KEY_HERE" ? _INJECTED_KEY : "");\n' > config.js
           fi
 
       - uses: actions/configure-pages@v4
