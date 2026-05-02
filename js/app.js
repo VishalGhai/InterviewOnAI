@@ -12,12 +12,12 @@ function init() {
 }
 
 function checkApiKey() {
-    const key = localStorage.getItem('gemini-api-key');
     const overlay = document.getElementById('apikeyOverlay');
     const input = document.getElementById('apikeyInput');
     const saveBtn = document.getElementById('apikeySaveBtn');
 
-    if (key && key !== 'YOUR_GEMINI_API_KEY_HERE') {
+    // Check if a valid key exists (from localStorage or injected config.js)
+    if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE') {
         overlay.style.display = 'none';
         return;
     }
