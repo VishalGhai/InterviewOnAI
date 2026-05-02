@@ -16,22 +16,11 @@ function checkApiKey() {
     const input = document.getElementById('apikeyInput');
     const saveBtn = document.getElementById('apikeySaveBtn');
 
-    // Debug logging
-    console.log('[API Key Check]');
-    console.log('  typeof GEMINI_API_KEY:', typeof GEMINI_API_KEY);
-    console.log('  GEMINI_API_KEY value:', typeof GEMINI_API_KEY !== 'undefined' ? GEMINI_API_KEY.substring(0, 8) + '...' : 'UNDEFINED');
-    console.log('  typeof _INJECTED_KEY:', typeof _INJECTED_KEY);
-    console.log('  _INJECTED_KEY value:', typeof _INJECTED_KEY !== 'undefined' ? _INJECTED_KEY.substring(0, 8) + '...' : 'UNDEFINED');
-    console.log('  localStorage key:', localStorage.getItem('gemini-api-key')?.substring(0, 8) || 'NOT SET');
-
     // Check if a valid key exists (from localStorage or injected config.js)
     if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE') {
-        console.log('  => Key is VALID, hiding modal');
         overlay.style.display = 'none';
         return;
     }
-
-    console.log('  => Key is MISSING or PLACEHOLDER, showing modal');
 
     overlay.style.display = 'flex';
 
