@@ -363,4 +363,103 @@ function setInputEnabled(enabled) {
     document.getElementById('submitBtn').disabled = !enabled;
 }
 
-document.addEventListener('DOMContentLoaded', initChat);
+// ─── Inactivity & Tab-Switch Detection ──────────────────
+
+let inactivityTimer = null;
+const INACTIVITY_TIMEOUT = 2 * 60 * 1000; // 2 minutes
+
+function isSessionComplete() {
+    return session.currentQuestion >= session.questionCount;
+}
+
+function getPendingInfo() {
+    const answered = session.scores.length;
+    const total = session.questionCount;
+    const pending = total - answered;
+    return { answered, total, pending };
+}
+
+function resetInactivityTimer() {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    if (isSessionComplete()) return;
+
+    inactivityTimer = setTimeout(() => {
+        if (!isSessionComplete()) showExitPrompt('inactivity');
+    }, INACTIVITY_TIMEOUT);
+}
+
+function showExitPrompt(reason) {
+    // Don't show if already showing or session is done
+    if (document.getElementById('exitModal') || isSessionComplete()) return;
+
+    const { answered, total, pending } = getPendingInfo();
+    const tierNote = session.isFreeTier ? '' : ' that you configured for this session';
+
+    const reasonMsg = reason === 'tab-switch'
+        ? `It looks like you switched away from the interview.`
+        : `You've been inactive for a while.`;
+
+    const modal = document.createElement('div');
+    modal.id = 'exitModal';
+    modal.className = 'exit-modal-overlay';
+    modal.innerHTML = `
+        <div class="exit-modal">
+            <div class="exit-modal-icon">⏸️</div>
+            <h3>Interview Paused</h3>
+            <p>${reasonMsg}</p>
+            <p class="exit-modal-detail">
+                You have <strong>${total} questions${tierNote}</strong>, but only
+                <strong>${answered}</strong> answered so far.
+                <strong>${pending} question${pending !== 1 ? 's' : ''} remaining</strong> — 
+                would you like to continue or end the interview?
+            </p>
+            <div class="exit-modal-actions">
+                <button class="btn-primary exit-continue" id="exitContinue">Continue Interview</button>
+                <button class="exit-end" id="exitEnd">End Interview</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('exitContinue').addEventListener('click', () => {
+        modal.remove();
+        resetInactivityTimer();
+        document.getElementById('answerInput').focus();
+    });
+
+    document.getElementById('exitEnd').addEventListener('click', () => {
+        modal.remove();
+        endSession();
+    });
+}
+
+function initInactivityDetection() {
+    // Reset timer on user activity
+    ['keydown', 'mousedown', 'touchstart', 'scroll'].forEach(evt => {
+        document.addEventListener(evt, resetInactivityTimer, { passive: true });
+    });
+
+    // Tab visibility change
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && !isSessionComplete()) {
+            showExitPrompt('tab-switch');
+        } else {
+            resetInactivityTimer();
+        }
+    });
+
+    // Browser/tab close
+    window.addEventListener('beforeunload', (e) => {
+        if (!isSessionComplete() && session.scores.length > 0) {
+            e.preventDefault();
+        }
+    });
+
+    resetInactivityTimer();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initChat();
+    initInactivityDetection();
+});
