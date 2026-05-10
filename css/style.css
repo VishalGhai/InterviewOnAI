@@ -91,6 +91,7 @@ body::after {
     max-width: 720px;
     margin: 0 auto;
     padding: 2rem 1.5rem;
+    padding-top: 4rem;
     animation: fadeInUp 0.6s ease-out;
 }
 
@@ -518,36 +519,6 @@ select:focus {
 }
 
 /* ─── History Sidebar ────────────────────────────────────── */
-
-.header-row {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 0.5rem;
-}
-
-.history-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.9rem;
-    font-size: 0.82rem;
-    font-weight: 600;
-    font-family: inherit;
-    color: var(--text-secondary);
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all var(--transition);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-.history-toggle:hover {
-    color: var(--accent);
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
-}
 
 .history-sidebar {
     position: fixed;

@@ -3,7 +3,6 @@
 (function () {
     const sidebar = document.getElementById('historySidebar');
     const overlay = document.getElementById('historyOverlay');
-    const toggleBtn = document.getElementById('historyToggle');
     const closeBtn = document.getElementById('historyClose');
     const listEl = document.getElementById('historyList');
 
@@ -20,7 +19,12 @@
         overlay.classList.remove('open');
     }
 
-    toggleBtn.addEventListener('click', openSidebar);
+    // Bind toggle via event delegation (button is rendered dynamically by auth.js)
+    document.addEventListener('click', (e) => {
+        const toggle = e.target.closest('#historyToggle');
+        if (toggle) openSidebar();
+    });
+
     closeBtn.addEventListener('click', closeSidebar);
     overlay.addEventListener('click', closeSidebar);
 

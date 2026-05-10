@@ -150,6 +150,30 @@
     animation: fadeIn 0.8s ease-out 0.6s both;
 }
 
+.history-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--text-secondary);
+    background: none;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.history-toggle:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
 .user-avatar {
     width: 34px;
     height: 34px;
@@ -200,6 +224,26 @@
 }
 
 /* Responsive */
+@media (max-width: 640px) {
+    .user-badge {
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+
+    .user-name {
+        display: none;
+    }
+
+    .logout-btn {
+        font-size: 0.68rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .history-toggle span {
+        display: none;
+    }
+}
+
 @media (max-width: 480px) {
     .auth-card {
         padding: 2rem 1.5rem;
@@ -208,14 +252,5 @@
 
     .auth-logo h1 {
         font-size: 1.7rem;
-    }
-
-    .user-badge {
-        top: 0.5rem;
-        left: 0.5rem;
-    }
-
-    .user-name {
-        display: none;
     }
 }

@@ -56,9 +56,19 @@
                 ? `<img class="user-avatar-img" src="${avatarUrl}" alt="${username}" referrerpolicy="no-referrer">`
                 : `<div class="user-avatar">${username.charAt(0).toUpperCase()}</div>`;
 
+            const historyBtn = document.getElementById('historySidebar')
+                ? `<button class="history-toggle" id="historyToggle" aria-label="Interview history">
+                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                       </svg>
+                       <span>History</span>
+                   </button>`
+                : '';
+
             badge.innerHTML = `
                 ${avatarHtml}
                 <span class="user-name">${username}</span>
+                ${historyBtn}
                 <button class="logout-btn" id="logoutBtn">Logout</button>
             `;
             document.body.appendChild(badge);
