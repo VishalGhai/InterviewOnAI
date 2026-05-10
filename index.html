@@ -11,8 +11,28 @@
     <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
+    <!-- History Sidebar -->
+    <aside class="history-sidebar" id="historySidebar">
+        <div class="history-header">
+            <h3>Past Interviews</h3>
+            <button class="history-close" id="historyClose" aria-label="Close sidebar">✕</button>
+        </div>
+        <div class="history-list" id="historyList">
+            <div class="history-loading">Loading...</div>
+        </div>
+    </aside>
+    <div class="history-overlay" id="historyOverlay"></div>
+
     <div class="container">
         <header class="header">
+            <div class="header-row">
+                <button class="history-toggle" id="historyToggle" aria-label="Interview history">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    History
+                </button>
+            </div>
             <h1>InterviewOn<span class="accent">AI</span></h1>
             <p class="subtitle">AI-powered interview preparation</p>
         </header>
@@ -67,9 +87,9 @@
 
     <script>document.body.style.visibility='hidden';</script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-client.js?v=4"></script>
-    <script src="js/database.js?v=4"></script>
-    <script src="js/auth.js?v=4"></script>
+    <script src="js/supabase-client.js?v=5"></script>
+    <script src="js/database.js?v=5"></script>
+    <script src="js/auth.js?v=5"></script>
     <script>
         (async () => {
             try {
@@ -83,7 +103,8 @@
         })();
     </script>
     <script src="config.js"></script>
-    <script src="js/theme.js?v=4"></script>
-    <script src="js/app.js?v=4"></script>
+    <script src="js/theme.js?v=5"></script>
+    <script src="js/app.js?v=5"></script>
+    <script src="js/history.js?v=5"></script>
 </body>
 </html>
