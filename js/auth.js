@@ -18,7 +18,7 @@
         async getUsername() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) return '';
-            return user.user_metadata?.username || user.email?.split('@')[0] || '';
+            return user.user_metadata?.display_name || user.email?.split('@')[0] || '';
         },
 
         async logout() {
@@ -116,25 +116,22 @@
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const username = document.getElementById('loginUser').value.trim().toLowerCase();
+        const email = document.getElementById('loginEmail').value.trim().toLowerCase();
         const password = document.getElementById('loginPass').value;
         const submitBtn = loginForm.querySelector('.auth-btn');
 
-        if (!username || !password) {
+        if (!email || !password) {
             showError('loginError', 'Please fill in all fields');
             return;
         }
 
         setButtonLoading(submitBtn, true);
 
-        // Supabase Auth uses email — we construct email from username
-        const email = `${username}@interviewonai.app`;
-
         const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (error) {
             setButtonLoading(submitBtn, false);
-            showError('loginError', 'Invalid username or password');
+            showError('loginError', 'Invalid email or password');
             document.getElementById('loginPass').classList.add('error');
             setTimeout(() => document.getElementById('loginPass').classList.remove('error'), 2000);
             return;
@@ -148,23 +145,14 @@
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const username = document.getElementById('signupUser').value.trim().toLowerCase();
+        const displayName = document.getElementById('signupName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim().toLowerCase();
         const password = document.getElementById('signupPass').value;
         const confirmPassword = document.getElementById('signupConfirm').value;
         const submitBtn = signupForm.querySelector('.auth-btn');
 
-        if (!username || !password || !confirmPassword) {
+        if (!displayName || !email || !password || !confirmPassword) {
             showError('signupError', 'Please fill in all fields');
-            return;
-        }
-
-        if (username.length < 3) {
-            showError('signupError', 'Username must be at least 3 characters');
-            return;
-        }
-
-        if (!/^[a-z0-9_]+$/.test(username)) {
-            showError('signupError', 'Username: only lowercase letters, numbers, underscores');
             return;
         }
 
@@ -182,13 +170,13 @@
 
         setButtonLoading(submitBtn, true);
 
-        const email = `${username}@interviewonai.app`;
+        const username = email.split('@')[0];
 
         const { error } = await supabaseClient.auth.signUp({
             email,
             password,
             options: {
-                data: { username, display_name: username }
+                data: { username, display_name: displayName }
             }
         });
 
