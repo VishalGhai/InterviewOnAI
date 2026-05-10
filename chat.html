@@ -112,10 +112,15 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/database.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        if (!AuthManager.isLoggedIn()) { window.location.href = 'login.html'; }
-        document.addEventListener('DOMContentLoaded', () => AuthManager.renderUserBadge());
+        (async () => {
+            if (!(await AuthManager.isLoggedIn())) { window.location.href = 'login.html'; return; }
+            document.addEventListener('DOMContentLoaded', () => AuthManager.renderUserBadge());
+        })();
     </script>
     <script src="js/theme.js"></script>
     <script src="config.js"></script>

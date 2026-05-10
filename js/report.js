@@ -8,15 +8,59 @@ const PARAM_NAMES = {
 
 const PARAMS_ORDER = ['accuracy', 'depth', 'clarity', 'relevance', 'practicalKnowledge'];
 
-function initReport() {
+async function initReport() {
+    // Try sessionStorage first (just-completed interview)
     const dataStr = sessionStorage.getItem('interviewReport');
-    if (!dataStr) {
-        window.location.href = 'index.html';
+    if (dataStr) {
+        const data = JSON.parse(dataStr);
+        renderReport(data);
         return;
     }
 
-    const data = JSON.parse(dataStr);
-    renderReport(data);
+    // Try loading from DB via URL param: ?id=<interviewId>
+    const urlParams = new URLSearchParams(window.location.search);
+    const interviewId = urlParams.get('id');
+
+    if (interviewId) {
+        const interview = await DatabaseService.getInterview(interviewId);
+        if (interview) {
+            const dbData = mapInterviewToReportData(interview);
+            renderReport(dbData);
+            return;
+        }
+    }
+
+    // No data found
+    window.location.href = 'index.html';
+}
+
+function mapInterviewToReportData(interview) {
+    const questions = (interview.questions || []).sort((a, b) => a.question_number - b.question_number);
+
+    return {
+        interviewId: interview.id,
+        contextType: interview.mode,
+        topicName: interview.topic,
+        difficulty: interview.difficulty,
+        questions: questions.map(q => q.question_text),
+        answers: questions.map(q => q.answer_text || ''),
+        scores: questions.map(q => ({
+            accuracy: q.accuracy,
+            depth: q.depth,
+            clarity: q.clarity,
+            relevance: q.relevance,
+            practicalKnowledge: q.practical,
+            feedback: q.feedback || ''
+        })),
+        overallScore: interview.overall_score || 0,
+        cumulativeScores: {
+            accuracy: interview.accuracy || 0,
+            depth: interview.depth || 0,
+            clarity: interview.clarity || 0,
+            relevance: interview.relevance || 0,
+            practicalKnowledge: interview.practical || 0
+        }
+    };
 }
 
 function renderReport(data) {

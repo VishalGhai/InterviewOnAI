@@ -4,6 +4,8 @@ let session = {
     topicName: '',
     questionCount: 10,
     difficulty: 'easy-medium',
+    isFreeTier: false,
+    interviewId: null,
     questions: [],
     answers: [],
     scores: [],
@@ -13,7 +15,7 @@ let session = {
     currentBotMsgEl: null
 };
 
-function initChat() {
+async function initChat() {
     const configStr = sessionStorage.getItem('interviewConfig');
     if (!configStr) {
         window.location.href = 'index.html';
@@ -26,6 +28,7 @@ function initChat() {
     session.topicName = config.topicName || '';
     session.questionCount = config.questionCount;
     session.difficulty = config.difficulty;
+    session.isFreeTier = config.isFreeTier || false;
 
     // Set header info
     const topicEl = document.getElementById('sessionTopic');
@@ -36,6 +39,19 @@ function initChat() {
     updateProgress();
     initMetrics();
     setupInputHandlers();
+
+    // Create interview record in database
+    const interview = await DatabaseService.createInterview({
+        mode: session.contextType,
+        topic: session.contextType === 'topic' ? session.topicName : 'Job Description',
+        jdText: session.contextType === 'jd' ? session.context : null,
+        difficulty: session.difficulty,
+        totalQuestions: session.questionCount
+    });
+
+    if (interview) {
+        session.interviewId = interview.id;
+    }
 
     // Extract keywords for JD mode (non-blocking)
     if (session.contextType === 'jd') {
@@ -142,6 +158,20 @@ async function handleSubmit() {
         // Show brief feedback in chat
         addMessage(`${score.feedback}`, 'feedback');
 
+        // Save question + answer + scores to database
+        if (session.interviewId) {
+            const questionOverall = Math.round(
+                (score.accuracy + score.depth + score.clarity + score.relevance + score.practicalKnowledge) / 5
+            );
+            await DatabaseService.saveQuestion(session.interviewId, {
+                questionNumber: session.currentQuestion + 1,
+                questionText: currentQ,
+                answerText: answer,
+                feedback: score.feedback,
+                scores: { ...score, overall: questionOverall }
+            });
+        }
+
         // Update sidebar metrics
         const overall = addScore(score);
         session.currentQuestion++;
@@ -166,11 +196,37 @@ async function handleSubmit() {
     }
 }
 
-function endSession() {
+async function endSession() {
     setInputEnabled(false);
 
-    // Store session data for report
+    const overallScore = getOverallScore();
+    const cumulativeScores = getCumulativeScores();
+
+    // Determine letter grade
+    const grade = overallScore >= 90 ? 'A+' : overallScore >= 80 ? 'A' :
+        overallScore >= 70 ? 'B' : overallScore >= 60 ? 'C' :
+        overallScore >= 50 ? 'D' : 'F';
+
+    // Complete interview in database
+    if (session.interviewId) {
+        await DatabaseService.completeInterview(session.interviewId, {
+            overall: overallScore,
+            accuracy: Math.round(cumulativeScores.accuracy),
+            depth: Math.round(cumulativeScores.depth),
+            clarity: Math.round(cumulativeScores.clarity),
+            relevance: Math.round(cumulativeScores.relevance),
+            practical: Math.round(cumulativeScores.practicalKnowledge)
+        }, grade);
+    }
+
+    // Mark free tier as exhausted
+    if (session.isFreeTier) {
+        await DatabaseService.markFreeTierExhausted();
+    }
+
+    // Store session data for report page (sessionStorage for quick access)
     const reportData = {
+        interviewId: session.interviewId,
         context: session.context,
         contextType: session.contextType,
         topicName: session.topicName,
@@ -178,8 +234,8 @@ function endSession() {
         questions: session.questions,
         answers: session.answers,
         scores: session.scores,
-        overallScore: getOverallScore(),
-        cumulativeScores: getCumulativeScores()
+        overallScore,
+        cumulativeScores
     };
     sessionStorage.setItem('interviewReport', JSON.stringify(reportData));
 

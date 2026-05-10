@@ -1,50 +1,35 @@
-/* Auth module — localStorage-based username/password auth */
+/* Auth Module — Supabase-backed authentication */
 
 (function () {
-    const USERS_KEY = 'interviewai-users';
-    const SESSION_KEY = 'interviewai-session';
 
-    // --- Helpers ---
-
-    function getUsers() {
-        try {
-            return JSON.parse(localStorage.getItem(USERS_KEY)) || {};
-        } catch { return {}; }
-    }
-
-    function saveUsers(users) {
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-    }
-
-    // Simple hash (not cryptographic — acceptable for client-only demo)
-    async function hashPassword(password) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(password);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        return Array.from(new Uint8Array(hashBuffer))
-            .map(b => b.toString(16).padStart(2, '0'))
-            .join('');
-    }
-
-    // --- Public API (attached to window) ---
+    // ─── Public API ─────────────────────────────────────────
 
     window.AuthManager = {
-        isLoggedIn() {
-            return !!sessionStorage.getItem(SESSION_KEY);
+        async isLoggedIn() {
+            const { data: { session } } = await supabase.auth.getSession();
+            return !!session;
         },
 
-        getUsername() {
-            return sessionStorage.getItem(SESSION_KEY) || '';
+        async getUser() {
+            const { data: { user } } = await supabase.auth.getUser();
+            return user;
         },
 
-        logout() {
-            sessionStorage.removeItem(SESSION_KEY);
+        async getUsername() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return '';
+            return user.user_metadata?.username || user.email?.split('@')[0] || '';
+        },
+
+        async logout() {
+            await supabase.auth.signOut();
             window.location.href = 'login.html';
         },
 
         /** Guard: redirect to login if not authenticated */
-        requireAuth() {
-            if (!this.isLoggedIn()) {
+        async requireAuth() {
+            const loggedIn = await this.isLoggedIn();
+            if (!loggedIn) {
                 window.location.href = 'login.html';
                 return false;
             }
@@ -52,13 +37,15 @@
         },
 
         /** Render user badge + logout on authenticated pages */
-        renderUserBadge() {
-            if (!this.isLoggedIn()) return;
-            const username = this.getUsername();
+        async renderUserBadge() {
+            const loggedIn = await this.isLoggedIn();
+            if (!loggedIn) return;
+
+            const username = await this.getUsername();
             const badge = document.createElement('div');
             badge.className = 'user-badge';
             badge.innerHTML = `
-                <div class="user-avatar">${username.charAt(0)}</div>
+                <div class="user-avatar">${username.charAt(0).toUpperCase()}</div>
                 <span class="user-name">${username}</span>
                 <button class="logout-btn" id="logoutBtn">Logout</button>
             `;
@@ -67,21 +54,23 @@
         }
     };
 
-    // --- Login page logic ---
+    // ─── Login Page Logic ───────────────────────────────────
 
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
 
-    // Only run on login.html
+    // Only run login logic on login.html
     if (!loginForm) return;
 
-    // If already logged in, go to index
-    if (AuthManager.isLoggedIn()) {
-        window.location.href = 'index.html';
-        return;
-    }
+    // If already logged in, redirect to index
+    (async () => {
+        if (await AuthManager.isLoggedIn()) {
+            window.location.href = 'index.html';
+            return;
+        }
+    })();
 
-    // Toggle forms
+    // Toggle between login/signup forms
     document.getElementById('showSignup').addEventListener('click', (e) => {
         e.preventDefault();
         loginForm.classList.add('hidden');
@@ -106,45 +95,65 @@
         });
     });
 
-    function showError(id, msg) {
-        const el = document.getElementById(id);
-        el.textContent = msg;
+    function showError(elementId, message) {
+        const el = document.getElementById(elementId);
+        el.textContent = message;
         setTimeout(() => { el.textContent = ''; }, 4000);
     }
 
-    // Login
+    function setButtonLoading(btn, loading) {
+        btn.disabled = loading;
+        btn.textContent = loading ? 'Please wait...' : btn.dataset.label;
+    }
+
+    // Store original button labels
+    document.querySelectorAll('.auth-btn').forEach(btn => {
+        btn.dataset.label = btn.textContent;
+    });
+
+    // ─── Login Handler ──────────────────────────────────────
+
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
         const username = document.getElementById('loginUser').value.trim().toLowerCase();
         const password = document.getElementById('loginPass').value;
+        const submitBtn = loginForm.querySelector('.auth-btn');
 
         if (!username || !password) {
             showError('loginError', 'Please fill in all fields');
             return;
         }
 
-        const users = getUsers();
-        const hash = await hashPassword(password);
+        setButtonLoading(submitBtn, true);
 
-        if (!users[username] || users[username] !== hash) {
+        // Supabase Auth uses email — we construct email from username
+        const email = `${username}@interviewonai.app`;
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+        if (error) {
+            setButtonLoading(submitBtn, false);
             showError('loginError', 'Invalid username or password');
             document.getElementById('loginPass').classList.add('error');
             setTimeout(() => document.getElementById('loginPass').classList.remove('error'), 2000);
             return;
         }
 
-        sessionStorage.setItem(SESSION_KEY, username);
         window.location.href = 'index.html';
     });
 
-    // Signup
+    // ─── Signup Handler ─────────────────────────────────────
+
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
         const username = document.getElementById('signupUser').value.trim().toLowerCase();
         const password = document.getElementById('signupPass').value;
-        const confirm = document.getElementById('signupConfirm').value;
+        const confirmPassword = document.getElementById('signupConfirm').value;
+        const submitBtn = signupForm.querySelector('.auth-btn');
 
-        if (!username || !password || !confirm) {
+        if (!username || !password || !confirmPassword) {
             showError('signupError', 'Please fill in all fields');
             return;
         }
@@ -154,30 +163,46 @@
             return;
         }
 
+        if (!/^[a-z0-9_]+$/.test(username)) {
+            showError('signupError', 'Username: only lowercase letters, numbers, underscores');
+            return;
+        }
+
         if (password.length < 6) {
             showError('signupError', 'Password must be at least 6 characters');
             return;
         }
 
-        if (password !== confirm) {
+        if (password !== confirmPassword) {
             showError('signupError', 'Passwords do not match');
             document.getElementById('signupConfirm').classList.add('error');
             setTimeout(() => document.getElementById('signupConfirm').classList.remove('error'), 2000);
             return;
         }
 
-        const users = getUsers();
+        setButtonLoading(submitBtn, true);
 
-        if (users[username]) {
-            showError('signupError', 'Username already taken');
+        const email = `${username}@interviewonai.app`;
+
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { username, display_name: username }
+            }
+        });
+
+        if (error) {
+            setButtonLoading(submitBtn, false);
+            if (error.message.includes('already registered')) {
+                showError('signupError', 'Username already taken');
+            } else {
+                showError('signupError', error.message);
+            }
             return;
         }
 
-        const hash = await hashPassword(password);
-        users[username] = hash;
-        saveUsers(users);
-
-        sessionStorage.setItem(SESSION_KEY, username);
         window.location.href = 'index.html';
     });
+
 })();

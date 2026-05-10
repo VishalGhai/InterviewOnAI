@@ -5,10 +5,26 @@ const TOPICS = [
     'REST APIs', 'GraphQL', 'MongoDB', 'PostgreSQL', 'Git', 'CI/CD'
 ];
 
-function init() {
+const FREE_TIER_QUESTION_COUNT = 5;
+
+async function init() {
     checkApiKey();
+    await checkFreeTierStatus();
     renderTopics();
     document.getElementById('startBtn').addEventListener('click', handleStart);
+}
+
+async function checkFreeTierStatus() {
+    const isExhausted = await DatabaseService.isFreeTierExhausted();
+    const questionSelect = document.getElementById('questionCount');
+    const freeOption = questionSelect.querySelector('option[value="free"]');
+
+    if (isExhausted && freeOption) {
+        freeOption.textContent = 'Free Tier (Used)';
+        freeOption.disabled = true;
+        // Select first available option
+        questionSelect.value = '5';
+    }
 }
 
 function checkApiKey() {
@@ -53,7 +69,24 @@ function renderTopics() {
     });
 }
 
-function handleStart() {
+async function getQuestionCount() {
+    const val = document.getElementById('questionCount').value;
+    if (val === 'free') {
+        const isExhausted = await DatabaseService.isFreeTierExhausted();
+        if (isExhausted) {
+            alert('Your free tier has been used. Please select a question count.');
+            return null;
+        }
+        return FREE_TIER_QUESTION_COUNT;
+    }
+    return parseInt(val);
+}
+
+function isFreeTierSelected() {
+    return document.getElementById('questionCount').value === 'free';
+}
+
+async function handleStart() {
     const jd = document.getElementById('jdInput').value.trim();
     if (!jd) {
         document.getElementById('jdInput').focus();
@@ -64,24 +97,32 @@ function handleStart() {
         return;
     }
 
+    const questionCount = await getQuestionCount();
+    if (!questionCount) return;
+
     const config = {
         context: jd,
         contextType: 'jd',
-        questionCount: parseInt(document.getElementById('questionCount').value),
-        difficulty: document.getElementById('difficulty').value
+        questionCount,
+        difficulty: document.getElementById('difficulty').value,
+        isFreeTier: isFreeTierSelected()
     };
 
     sessionStorage.setItem('interviewConfig', JSON.stringify(config));
     window.location.href = 'chat.html';
 }
 
-function handleTopicClick(topic) {
+async function handleTopicClick(topic) {
+    const questionCount = await getQuestionCount();
+    if (!questionCount) return;
+
     const config = {
         context: `${topic} technical interview. Focus on core concepts, best practices, common interview questions, and real-world scenarios for ${topic}.`,
         contextType: 'topic',
         topicName: topic,
-        questionCount: parseInt(document.getElementById('questionCount').value),
-        difficulty: document.getElementById('difficulty').value
+        questionCount,
+        difficulty: document.getElementById('difficulty').value,
+        isFreeTier: isFreeTierSelected()
     };
 
     sessionStorage.setItem('interviewConfig', JSON.stringify(config));
