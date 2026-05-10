@@ -8,12 +8,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/report.css">
-    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/report.css?v=7">
+    <link rel="stylesheet" href="css/auth.css?v=7">
 </head>
 <body>
     <div class="report-container">
         <header class="report-header">
+            <div class="report-header-top">
+                <a href="index.html" class="back-btn">← Home</a>
+                <div class="header-user" id="headerUser"></div>
+            </div>
             <h1>Interview Report Card</h1>
             <p id="reportSubtitle" class="report-subtitle"></p>
         </header>
@@ -65,9 +69,9 @@
 
     <script>document.body.style.visibility='hidden';</script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-client.js?v=6"></script>
-    <script src="js/database.js?v=6"></script>
-    <script src="js/auth.js?v=6"></script>
+    <script src="js/supabase-client.js?v=7"></script>
+    <script src="js/database.js?v=7"></script>
+    <script src="js/auth.js?v=7"></script>
     <script>
         (async () => {
             try {
@@ -80,7 +84,7 @@
             }
         })();
     </script>
-    <script src="js/theme.js?v=6"></script>
-    <script src="js/report.js?v=6"></script>
+    <script src="js/theme.js?v=7"></script>
+    <script src="js/report.js?v=7"></script>
 </body>
 </html>

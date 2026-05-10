@@ -8,8 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/chat.css">
-    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/chat.css?v=7">
+    <link rel="stylesheet" href="css/auth.css?v=7">
 </head>
 <body>
     <div class="chat-layout">
@@ -21,6 +21,7 @@
                     <span id="sessionTopic" class="session-topic"></span>
                     <span id="progressText" class="progress-text">Question 0 / 0</span>
                 </div>
+                <div class="header-user" id="headerUser"></div>
             </div>
 
             <div class="progress-bar-container">
@@ -114,9 +115,9 @@
 
     <script>document.body.style.visibility='hidden';</script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-client.js?v=6"></script>
-    <script src="js/database.js?v=6"></script>
-    <script src="js/auth.js?v=6"></script>
+    <script src="js/supabase-client.js?v=7"></script>
+    <script src="js/database.js?v=7"></script>
+    <script src="js/auth.js?v=7"></script>
     <script>
         (async () => {
             try {
@@ -129,11 +130,11 @@
             }
         })();
     </script>
-    <script src="js/theme.js?v=6"></script>
+    <script src="js/theme.js?v=7"></script>
     <script src="config.js"></script>
-    <script src="js/gemini.js?v=6"></script>
-    <script src="js/metrics.js?v=6"></script>
-    <script src="js/motivation.js?v=6"></script>
-    <script src="js/chat.js?v=6"></script>
+    <script src="js/gemini.js?v=7"></script>
+    <script src="js/metrics.js?v=7"></script>
+    <script src="js/motivation.js?v=7"></script>
+    <script src="js/chat.js?v=7"></script>
 </body>
 </html>

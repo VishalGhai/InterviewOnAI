@@ -37,6 +37,29 @@
     color: var(--accent);
 }
 
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.header-user .user-avatar,
+.header-user .user-avatar-img {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+}
+
+.header-user .user-name {
+    font-size: 0.78rem;
+}
+
+.header-user .logout-btn {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.45rem;
+}
+
 .session-info {
     display: flex;
     flex: 1;

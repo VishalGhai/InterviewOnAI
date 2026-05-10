@@ -49,12 +49,26 @@
 
             const username = await this.getUsername();
             const avatarUrl = await this.getAvatarUrl();
-            const badge = document.createElement('div');
-            badge.className = 'user-badge';
 
             const avatarHtml = avatarUrl
                 ? `<img class="user-avatar-img" src="${avatarUrl}" alt="${username}" referrerpolicy="no-referrer">`
                 : `<div class="user-avatar">${username.charAt(0).toUpperCase()}</div>`;
+
+            // If page has an inline header slot, render there instead of floating
+            const headerSlot = document.getElementById('headerUser');
+            if (headerSlot) {
+                headerSlot.innerHTML = `
+                    ${avatarHtml}
+                    <span class="user-name">${username}</span>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                `;
+                document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+                return;
+            }
+
+            // Floating badge for index page
+            const badge = document.createElement('div');
+            badge.className = 'user-badge';
 
             const historyBtn = document.getElementById('historySidebar')
                 ? `<button class="history-toggle" id="historyToggle" aria-label="Interview history">
