@@ -8,7 +8,7 @@ const DatabaseService = {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return null;
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('profiles')
             .select('*')
             .eq('id', user.id)
@@ -27,7 +27,7 @@ const DatabaseService = {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return;
 
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('profiles')
             .update({ is_free_tier_exhausted: true })
             .eq('id', user.id);
@@ -41,7 +41,7 @@ const DatabaseService = {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return null;
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('interviews')
             .insert({
                 user_id: user.id,
@@ -60,7 +60,7 @@ const DatabaseService = {
     },
 
     async completeInterview(interviewId, scores, grade) {
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('interviews')
             .update({
                 overall_score: scores.overall,
@@ -79,7 +79,7 @@ const DatabaseService = {
     },
 
     async getInterview(interviewId) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('interviews')
             .select('*, questions(*)')
             .eq('id', interviewId)
@@ -93,7 +93,7 @@ const DatabaseService = {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return [];
 
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('interviews')
             .select('id, mode, topic, difficulty, total_questions, overall_score, grade, status, started_at, completed_at')
             .eq('user_id', user.id)
@@ -106,7 +106,7 @@ const DatabaseService = {
     // ─── Questions ──────────────────────────────────────────
 
     async saveQuestion(interviewId, { questionNumber, questionText, answerText, feedback, scores }) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('questions')
             .insert({
                 interview_id: interviewId,
@@ -130,7 +130,7 @@ const DatabaseService = {
     },
 
     async getQuestionsByInterview(interviewId) {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('questions')
             .select('*')
             .eq('interview_id', interviewId)
