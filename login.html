@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — InterviewOnAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <h1>InterviewOn<span class="accent">AI</span></h1>
+                <p class="auth-tagline">AI-powered interview preparation</p>
+            </div>
+
+            <!-- Login Form -->
+            <form class="auth-form" id="loginForm">
+                <h2 class="auth-title">Welcome back</h2>
+                <div class="form-group">
+                    <label for="loginUser">Username</label>
+                    <input type="text" id="loginUser" placeholder="Enter your username" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPass">Password</label>
+                    <div class="password-wrap">
+                        <input type="password" id="loginPass" placeholder="Enter your password" autocomplete="current-password" required>
+                        <button type="button" class="toggle-pass" data-target="loginPass">👁</button>
+                    </div>
+                </div>
+                <div class="auth-error" id="loginError"></div>
+                <button type="submit" class="btn-primary auth-btn">Log In</button>
+                <p class="auth-switch">Don't have an account? <a href="#" id="showSignup">Sign up</a></p>
+            </form>
+
+            <!-- Signup Form -->
+            <form class="auth-form hidden" id="signupForm">
+                <h2 class="auth-title">Create account</h2>
+                <div class="form-group">
+                    <label for="signupUser">Username</label>
+                    <input type="text" id="signupUser" placeholder="Choose a username" autocomplete="username" required minlength="3">
+                </div>
+                <div class="form-group">
+                    <label for="signupPass">Password</label>
+                    <div class="password-wrap">
+                        <input type="password" id="signupPass" placeholder="Create a password" autocomplete="new-password" required minlength="6">
+                        <button type="button" class="toggle-pass" data-target="signupPass">👁</button>
+                    </div>
+                    <span class="field-hint">At least 6 characters</span>
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirm">Confirm Password</label>
+                    <div class="password-wrap">
+                        <input type="password" id="signupConfirm" placeholder="Confirm your password" autocomplete="new-password" required>
+                        <button type="button" class="toggle-pass" data-target="signupConfirm">👁</button>
+                    </div>
+                </div>
+                <div class="auth-error" id="signupError"></div>
+                <button type="submit" class="btn-primary auth-btn">Create Account</button>
+                <p class="auth-switch">Already have an account? <a href="#" id="showLogin">Log in</a></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
