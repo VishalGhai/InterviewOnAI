@@ -5,7 +5,7 @@ const DatabaseService = {
     // ─── Profile ────────────────────────────────────────────
 
     async getProfile() {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return null;
 
         const { data, error } = await supabase
@@ -24,7 +24,7 @@ const DatabaseService = {
     },
 
     async markFreeTierExhausted() {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return;
 
         const { error } = await supabase
@@ -38,7 +38,7 @@ const DatabaseService = {
     // ─── Interviews ─────────────────────────────────────────
 
     async createInterview({ mode, topic, jdText, difficulty, totalQuestions }) {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return null;
 
         const { data, error } = await supabase
@@ -90,7 +90,7 @@ const DatabaseService = {
     },
 
     async getInterviewHistory() {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return [];
 
         const { data, error } = await supabase

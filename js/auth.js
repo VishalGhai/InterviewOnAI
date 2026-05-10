@@ -6,23 +6,23 @@
 
     window.AuthManager = {
         async isLoggedIn() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             return !!session;
         },
 
         async getUser() {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await supabaseClient.auth.getUser();
             return user;
         },
 
         async getUsername() {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) return '';
             return user.user_metadata?.username || user.email?.split('@')[0] || '';
         },
 
         async logout() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             window.location.href = 'login.html';
         },
 
@@ -130,7 +130,7 @@
         // Supabase Auth uses email — we construct email from username
         const email = `${username}@interviewonai.app`;
 
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if (error) {
             setButtonLoading(submitBtn, false);
@@ -184,7 +184,7 @@
 
         const email = `${username}@interviewonai.app`;
 
-        const { error } = await supabase.auth.signUp({
+        const { error } = await supabaseClient.auth.signUp({
             email,
             password,
             options: {
