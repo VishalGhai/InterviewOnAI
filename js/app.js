@@ -7,11 +7,41 @@ const TOPICS = [
 
 const FREE_TIER_QUESTION_COUNT = 5;
 
+const TIER_PRICING = {
+    'free': 0,
+    '5': 4900,
+    '10': 9900,
+    '15': 14900,
+    '20': 19900,
+};
+
+const TIER_DISPLAY = {
+    '5': '₹49',
+    '10': '₹99',
+    '15': '₹149',
+    '20': '₹199',
+};
+
 async function init() {
     checkApiKey();
     await checkFreeTierStatus();
     renderTopics();
     document.getElementById('startBtn').addEventListener('click', handleStart);
+    setupDynamicButtonText();
+}
+
+function setupDynamicButtonText() {
+    const select = document.getElementById('questionCount');
+    const btn = document.getElementById('startBtn');
+
+    select.addEventListener('change', () => {
+        const val = select.value;
+        if (val === 'free') {
+            btn.textContent = 'Start Interview';
+        } else {
+            btn.textContent = `Pay ${TIER_DISPLAY[val]} & Start Interview`;
+        }
+    });
 }
 
 async function checkFreeTierStatus() {
@@ -108,8 +138,7 @@ async function handleStart() {
         isFreeTier: isFreeTierSelected()
     };
 
-    sessionStorage.setItem('interviewConfig', JSON.stringify(config));
-    window.location.href = 'chat.html';
+    await processPayment(config);
 }
 
 async function handleTopicClick(topic) {
@@ -125,8 +154,105 @@ async function handleTopicClick(topic) {
         isFreeTier: isFreeTierSelected()
     };
 
-    sessionStorage.setItem('interviewConfig', JSON.stringify(config));
-    window.location.href = 'chat.html';
+    await processPayment(config);
+}
+
+async function processPayment(config) {
+    // Free tier — skip payment entirely
+    if (config.isFreeTier) {
+        sessionStorage.setItem('interviewConfig', JSON.stringify(config));
+        window.location.href = 'chat.html';
+        return;
+    }
+
+    const tier = String(config.questionCount);
+    const amount = TIER_PRICING[tier];
+    if (!amount) {
+        alert('Invalid tier selected.');
+        return;
+    }
+
+    const startBtn = document.getElementById('startBtn');
+    const originalText = startBtn.textContent;
+    startBtn.disabled = true;
+    startBtn.textContent = 'Creating order…';
+
+    try {
+        // 1. Create Razorpay order via Edge Function
+        const { order_id, payment_id } = await DatabaseService.createPaymentOrder(amount, tier);
+
+        // 2. Get user info for Razorpay prefill
+        const userName = await AuthManager.getUsername();
+        const user = await AuthManager.getUser();
+        const userEmail = user?.email || '';
+
+        // 3. Open Razorpay Checkout
+        startBtn.textContent = 'Waiting for payment…';
+
+        const options = {
+            key: RAZORPAY_KEY_ID,
+            amount,
+            currency: 'INR',
+            name: 'InterviewOnAI',
+            description: `${tier} Question Interview`,
+            order_id,
+            prefill: {
+                name: userName,
+                email: userEmail,
+            },
+            theme: {
+                color: '#6366f1',
+            },
+            handler: async function (response) {
+                // 4. Verify payment via Edge Function
+                startBtn.textContent = 'Verifying payment…';
+                try {
+                    const result = await DatabaseService.verifyPayment(
+                        response.razorpay_order_id,
+                        response.razorpay_payment_id,
+                        response.razorpay_signature,
+                        payment_id,
+                    );
+
+                    if (result.verified) {
+                        config.paymentId = payment_id;
+                        sessionStorage.setItem('interviewConfig', JSON.stringify(config));
+                        window.location.href = 'chat.html';
+                    } else {
+                        alert('Payment verification failed. Please try again.');
+                        startBtn.disabled = false;
+                        startBtn.textContent = originalText;
+                    }
+                } catch (err) {
+                    console.error('Payment verification error:', err);
+                    alert('Payment verification failed. Please contact support.');
+                    startBtn.disabled = false;
+                    startBtn.textContent = originalText;
+                }
+            },
+            modal: {
+                ondismiss: function () {
+                    startBtn.disabled = false;
+                    startBtn.textContent = originalText;
+                },
+            },
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+            console.error('Payment failed:', response.error);
+            alert(`Payment failed: ${response.error.description}`);
+            startBtn.disabled = false;
+            startBtn.textContent = originalText;
+        });
+        rzp.open();
+
+    } catch (err) {
+        console.error('Order creation error:', err);
+        alert('Failed to create payment order. Please try again.');
+        startBtn.disabled = false;
+        startBtn.textContent = originalText;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', init);

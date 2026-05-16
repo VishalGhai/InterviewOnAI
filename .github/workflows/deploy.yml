@@ -23,11 +23,17 @@ jobs:
       - name: Create config.js
         env:
           API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          RZP_KEY: ${{ secrets.RAZORPAY_KEY_ID }}
         run: |
           if [ -n "$API_KEY" ]; then
             printf 'const _INJECTED_KEY = "%s";\nconst GEMINI_API_KEY = localStorage.getItem("gemini-api-key")\n    || (_INJECTED_KEY !== "YOUR_GEMINI_API_KEY_HERE" ? _INJECTED_KEY : "");\n' "$API_KEY" > config.js
           else
             printf 'const _INJECTED_KEY = "YOUR_GEMINI_API_KEY_HERE";\nconst GEMINI_API_KEY = localStorage.getItem("gemini-api-key")\n    || (_INJECTED_KEY !== "YOUR_GEMINI_API_KEY_HERE" ? _INJECTED_KEY : "");\n' > config.js
+          fi
+          if [ -n "$RZP_KEY" ]; then
+            printf '\nconst RAZORPAY_KEY_ID = "%s";\n' "$RZP_KEY" >> config.js
+          else
+            printf '\nconst RAZORPAY_KEY_ID = "";\n' >> config.js
           fi
 
       - uses: actions/configure-pages@v4

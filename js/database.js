@@ -138,5 +138,39 @@ const DatabaseService = {
 
         if (error) { console.error('getQuestionsByInterview error:', error); return []; }
         return data || [];
+    },
+
+    // ─── Payments (Edge Function calls) ─────────────────────
+
+    async callEdgeFunction(action, body) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) throw new Error('Not authenticated');
+
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/razorpay`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+                'apikey': SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ action, ...body }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Edge function call failed');
+        return data;
+    },
+
+    async createPaymentOrder(amount, tier) {
+        return this.callEdgeFunction('create-order', { amount, tier });
+    },
+
+    async verifyPayment(razorpayOrderId, razorpayPaymentId, razorpaySignature, paymentId) {
+        return this.callEdgeFunction('verify-payment', {
+            razorpay_order_id: razorpayOrderId,
+            razorpay_payment_id: razorpayPaymentId,
+            razorpay_signature: razorpaySignature,
+            payment_id: paymentId,
+        });
     }
 };

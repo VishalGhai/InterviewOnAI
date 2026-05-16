@@ -167,3 +167,33 @@ CREATE OR REPLACE TRIGGER profiles_updated_at
     BEFORE UPDATE ON public.profiles
     FOR EACH ROW
     EXECUTE FUNCTION public.update_updated_at();
+
+-- ============================================================
+-- 4. Payments table (Razorpay)
+-- ============================================================
+
+CREATE TABLE public.payments (
+    id                  UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id             UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    razorpay_order_id   TEXT NOT NULL,
+    razorpay_payment_id TEXT,
+    razorpay_signature  TEXT,
+    amount              INTEGER NOT NULL,          -- in paise
+    currency            TEXT DEFAULT 'INR' NOT NULL,
+    tier                TEXT NOT NULL,              -- 'free', '5', '10', '15', '20'
+    status              TEXT DEFAULT 'created' NOT NULL CHECK (status IN ('created', 'paid', 'failed')),
+    created_at          TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    paid_at             TIMESTAMPTZ
+);
+
+CREATE INDEX idx_payments_user_id ON public.payments(user_id);
+
+-- RLS for payments
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own payments
+CREATE POLICY "payments_select_own"
+    ON public.payments FOR SELECT
+    USING (user_id = auth.uid());
+
+-- Insert/update handled by Edge Function via service_role key (bypasses RLS)
