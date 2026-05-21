@@ -291,6 +291,7 @@ select:focus {
 
 .topic-btn {
     padding: 0.75rem 0.5rem;
+    padding-bottom: 1.8rem;
     border: 1px solid var(--glass-border);
     border-radius: var(--radius);
     background: var(--glass);
@@ -304,6 +305,18 @@ select:focus {
     text-align: center;
     position: relative;
     overflow: hidden;
+}
+
+.topic-price {
+    position: absolute;
+    bottom: 0.35rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--accent);
+    opacity: 0.85;
+    pointer-events: none;
 }
 
 .topic-btn::after {

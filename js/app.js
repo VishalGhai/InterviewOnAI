@@ -41,6 +41,7 @@ function setupDynamicButtonText() {
         } else {
             btn.textContent = `Pay ${TIER_DISPLAY[val]} & Start Interview`;
         }
+        updateTopicPrices();
     });
 }
 
@@ -54,6 +55,8 @@ async function checkFreeTierStatus() {
         freeOption.disabled = true;
         // Select first available option
         questionSelect.value = '5';
+        // Update button text and topic prices for paid tier
+        document.getElementById('startBtn').textContent = `Pay ${TIER_DISPLAY['5']} & Start Interview`;
     }
 }
 
@@ -89,13 +92,31 @@ function checkApiKey() {
 
 function renderTopics() {
     const grid = document.getElementById('topicsGrid');
+    const tierVal = document.getElementById('questionCount').value;
+    const priceTag = tierVal === 'free' ? '' : `<span class="topic-price">${TIER_DISPLAY[tierVal]}</span>`;
+
     grid.innerHTML = TOPICS.map(topic =>
-        `<button class="topic-btn" data-topic="${topic}">${topic}</button>`
+        `<button class="topic-btn" data-topic="${topic}">${topic}${priceTag}</button>`
     ).join('');
 
     grid.addEventListener('click', (e) => {
         const btn = e.target.closest('.topic-btn');
         if (btn) handleTopicClick(btn.dataset.topic);
+    });
+}
+
+function updateTopicPrices() {
+    const tierVal = document.getElementById('questionCount').value;
+    const priceTag = tierVal === 'free' ? '' : TIER_DISPLAY[tierVal];
+    document.querySelectorAll('.topic-btn').forEach(btn => {
+        const existing = btn.querySelector('.topic-price');
+        if (existing) existing.remove();
+        if (priceTag) {
+            const span = document.createElement('span');
+            span.className = 'topic-price';
+            span.textContent = priceTag;
+            btn.appendChild(span);
+        }
     });
 }
 
