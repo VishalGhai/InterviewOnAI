@@ -22,6 +22,24 @@ function jsonResponse(body: unknown, status = 200) {
     });
 }
 
+function randomCode(prefix = "ERR"): string {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let suffix = "";
+    for (let i = 0; i < 6; i++) {
+        suffix += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return `${prefix}${suffix}`;
+}
+
+function errorResponse(internalCode: string, status = 500, details?: unknown) {
+    const publicCode = randomCode("SRV");
+    console.error("[EDGE_ERROR]", { internalCode, publicCode, details });
+    return jsonResponse({
+        error: `Sorry, we will back soon (${publicCode})`,
+        code: publicCode,
+    }, status);
+}
+
 /* ─── HMAC-SHA256 verification ─── */
 async function hmacSha256(key: string, message: string): Promise<string> {
     const encoder = new TextEncoder();
@@ -64,13 +82,13 @@ async function createOrder(userId: string, tier: string, amount: number) {
     // Server-side validation: amount must match tier
     const expectedAmount = TIER_AMOUNTS[tier];
     if (!expectedAmount || expectedAmount !== amount) {
-        return jsonResponse({ error: "Invalid tier or amount" }, 400);
+        return errorResponse("EDGE-ORDER-VALIDATION-001", 400, { tier, amount, expectedAmount });
     }
 
     const keyId = Deno.env.get("RAZORPAY_KEY_ID");
     const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
     if (!keyId || !keySecret) {
-        return jsonResponse({ error: "Payment service not configured" }, 500);
+        return errorResponse("EDGE-ORDER-CONFIG-001", 500);
     }
 
     // Create Razorpay order
@@ -89,8 +107,7 @@ async function createOrder(userId: string, tier: string, amount: number) {
 
     if (!rzpRes.ok) {
         const err = await rzpRes.text();
-        console.error("Razorpay create order error:", err);
-        return jsonResponse({ error: "Failed to create payment order" }, 502);
+        return errorResponse("EDGE-ORDER-RAZORPAY-001", 502, err);
     }
 
     const order = await rzpRes.json();
@@ -110,8 +127,7 @@ async function createOrder(userId: string, tier: string, amount: number) {
         .single();
 
     if (error) {
-        console.error("DB insert error:", error);
-        return jsonResponse({ error: "Failed to record payment" }, 500);
+        return errorResponse("EDGE-ORDER-DB-001", 500, error);
     }
 
     return jsonResponse({ order_id: order.id, payment_id: data.id });
@@ -126,7 +142,7 @@ async function verifyPayment(
 ) {
     const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
     if (!keySecret) {
-        return jsonResponse({ error: "Payment service not configured" }, 500);
+        return errorResponse("EDGE-VERIFY-CONFIG-001", 500);
     }
 
     // HMAC SHA256 verification
@@ -143,7 +159,7 @@ async function verifyPayment(
             .update({ status: "failed" })
             .eq("id", paymentId);
 
-        return jsonResponse({ verified: false, error: "Signature mismatch" }, 400);
+        return errorResponse("EDGE-VERIFY-SIGNATURE-001", 400, { paymentId, razorpayOrderId });
     }
 
     // Update payment record
@@ -159,8 +175,7 @@ async function verifyPayment(
         .eq("id", paymentId);
 
     if (error) {
-        console.error("DB update error:", error);
-        return jsonResponse({ error: "Failed to update payment record" }, 500);
+        return errorResponse("EDGE-VERIFY-DB-001", 500, error);
     }
 
     return jsonResponse({ verified: true });
@@ -168,37 +183,39 @@ async function verifyPayment(
 
 /* ─── Main handler ─── */
 Deno.serve(async (req: Request) => {
-    // Handle CORS preflight
-    if (req.method === "OPTIONS") {
-        return new Response("ok", { headers: CORS_HEADERS });
-    }
+    try {
+        if (req.method === "OPTIONS") {
+            return new Response("ok", { headers: CORS_HEADERS });
+        }
 
-    if (req.method !== "POST") {
-        return jsonResponse({ error: "Method not allowed" }, 405);
-    }
+        if (req.method !== "POST") {
+            return errorResponse("EDGE-METHOD-001", 405, { method: req.method });
+        }
 
-    // Authenticate user
-    const user = await getUser(req.headers.get("authorization"));
-    if (!user) {
-        return jsonResponse({ error: "Unauthorized" }, 401);
-    }
+        const user = await getUser(req.headers.get("authorization"));
+        if (!user) {
+            return errorResponse("EDGE-AUTH-001", 401);
+        }
 
-    const body = await req.json();
-    const { action } = body;
+        const body = await req.json();
+        const { action } = body;
 
-    switch (action) {
-        case "create-order":
-            return createOrder(user.id, body.tier, body.amount);
+        switch (action) {
+            case "create-order":
+                return createOrder(user.id, body.tier, body.amount);
 
-        case "verify-payment":
-            return verifyPayment(
-                body.razorpay_order_id,
-                body.razorpay_payment_id,
-                body.razorpay_signature,
-                body.payment_id,
-            );
+            case "verify-payment":
+                return verifyPayment(
+                    body.razorpay_order_id,
+                    body.razorpay_payment_id,
+                    body.razorpay_signature,
+                    body.payment_id,
+                );
 
-        default:
-            return jsonResponse({ error: "Unknown action" }, 400);
+            default:
+                return errorResponse("EDGE-ACTION-001", 400, { action });
+        }
+    } catch (error) {
+        return errorResponse("EDGE-UNHANDLED-001", 500, error);
     }
 });

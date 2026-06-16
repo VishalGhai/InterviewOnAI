@@ -87,6 +87,7 @@
 
     <script>document.body.style.visibility='hidden';</script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/error-handler.js?v=12"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="js/supabase-client.js?v=11"></script>
     <script src="js/database.js?v=11"></script>
@@ -98,7 +99,11 @@
                 document.body.style.visibility = 'visible';
                 AuthManager.renderUserBadge();
             } catch (e) {
-                console.error('Auth check failed:', e);
+                ErrorHandler.capture(e, {
+                    internalCode: 'AUTH-PAGE-GUARD-INDEX-001',
+                    context: 'index.authGuard',
+                    publicPrefix: 'AUTH'
+                });
                 window.location.href = 'login.html';
             }
         })();

@@ -15,50 +15,64 @@ let session = {
     currentBotMsgEl: null
 };
 
-async function initChat() {
-    const configStr = sessionStorage.getItem('interviewConfig');
-    if (!configStr) {
-        window.location.href = 'index.html';
-        return;
-    }
-
-    const config = JSON.parse(configStr);
-    session.context = config.context;
-    session.contextType = config.contextType;
-    session.topicName = config.topicName || '';
-    session.questionCount = config.questionCount;
-    session.difficulty = config.difficulty;
-    session.isFreeTier = config.isFreeTier || false;
-
-    // Set header info
-    const topicEl = document.getElementById('sessionTopic');
-    topicEl.textContent = session.contextType === 'topic'
-        ? `${session.topicName} Interview`
-        : 'Job Description Interview';
-
-    updateProgress();
-    initMetrics();
-    setupInputHandlers();
-
-    // Create interview record in database
-    const interview = await DatabaseService.createInterview({
-        mode: session.contextType,
-        topic: session.contextType === 'topic' ? session.topicName : 'Job Description',
-        jdText: session.contextType === 'jd' ? session.context : null,
-        difficulty: session.difficulty,
-        totalQuestions: session.questionCount
+function showChatError(error, internalCode, context, options = {}) {
+    const details = ErrorHandler.capture(error, {
+        internalCode,
+        context,
+        publicPrefix: 'CHAT'
     });
-
-    if (interview) {
-        session.interviewId = interview.id;
+    if (!options.silent) {
+        addMessage(ErrorHandler.userMessage(details.publicCode), 'error');
     }
+    return details;
+}
 
-    // Extract keywords for JD mode (non-blocking)
-    if (session.contextType === 'jd') {
-        loadKeywords(session.context);
+async function initChat() {
+    try {
+        const configStr = sessionStorage.getItem('interviewConfig');
+        if (!configStr) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        const config = JSON.parse(configStr);
+        session.context = config.context;
+        session.contextType = config.contextType;
+        session.topicName = config.topicName || '';
+        session.questionCount = config.questionCount;
+        session.difficulty = config.difficulty;
+        session.isFreeTier = config.isFreeTier || false;
+
+        const topicEl = document.getElementById('sessionTopic');
+        topicEl.textContent = session.contextType === 'topic'
+            ? `${session.topicName} Interview`
+            : 'Job Description Interview';
+
+        updateProgress();
+        initMetrics();
+        setupInputHandlers();
+
+        const interview = await DatabaseService.createInterview({
+            mode: session.contextType,
+            topic: session.contextType === 'topic' ? session.topicName : 'Job Description',
+            jdText: session.contextType === 'jd' ? session.context : null,
+            difficulty: session.difficulty,
+            totalQuestions: session.questionCount
+        });
+
+        if (interview) {
+            session.interviewId = interview.id;
+        }
+
+        if (session.contextType === 'jd') {
+            loadKeywords(session.context);
+        }
+
+        askNextQuestion();
+    } catch (error) {
+        showChatError(error, 'CHAT-INIT-001', 'chat.initChat');
+        setInputEnabled(false);
     }
-
-    askNextQuestion();
 }
 
 function setupInputHandlers() {
@@ -119,7 +133,7 @@ async function askNextQuestion() {
         document.getElementById('answerInput').focus();
     } catch (err) {
         removeTyping();
-        addMessage(`Error: ${err.message}. Please check your API key and try again.`, 'error');
+        showChatError(err, 'CHAT-QUESTION-GEN-001', 'chat.askNextQuestion');
         setInputEnabled(false);
     } finally {
         session.isProcessing = false;
@@ -190,60 +204,60 @@ async function handleSubmit() {
         }, 1000);
     } catch (err) {
         removeTyping();
-        addMessage(`Error evaluating answer: ${err.message}`, 'error');
+        showChatError(err, 'CHAT-ANSWER-EVAL-001', 'chat.handleSubmit');
         setInputEnabled(true);
         session.isProcessing = false;
     }
 }
 
 async function endSession() {
-    setInputEnabled(false);
+    try {
+        setInputEnabled(false);
 
-    const overallScore = getOverallScore();
-    const cumulativeScores = getCumulativeScores();
+        const overallScore = getOverallScore();
+        const cumulativeScores = getCumulativeScores();
 
-    // Determine letter grade
-    const grade = overallScore >= 90 ? 'A+' : overallScore >= 80 ? 'A' :
-        overallScore >= 70 ? 'B' : overallScore >= 60 ? 'C' :
-        overallScore >= 50 ? 'D' : 'F';
+        const grade = overallScore >= 90 ? 'A+' : overallScore >= 80 ? 'A' :
+            overallScore >= 70 ? 'B' : overallScore >= 60 ? 'C' :
+            overallScore >= 50 ? 'D' : 'F';
 
-    // Complete interview in database
-    if (session.interviewId) {
-        await DatabaseService.completeInterview(session.interviewId, {
-            overall: overallScore,
-            accuracy: Math.round(cumulativeScores.accuracy),
-            depth: Math.round(cumulativeScores.depth),
-            clarity: Math.round(cumulativeScores.clarity),
-            relevance: Math.round(cumulativeScores.relevance),
-            practical: Math.round(cumulativeScores.practicalKnowledge)
-        }, grade);
+        if (session.interviewId) {
+            await DatabaseService.completeInterview(session.interviewId, {
+                overall: overallScore,
+                accuracy: Math.round(cumulativeScores.accuracy),
+                depth: Math.round(cumulativeScores.depth),
+                clarity: Math.round(cumulativeScores.clarity),
+                relevance: Math.round(cumulativeScores.relevance),
+                practical: Math.round(cumulativeScores.practicalKnowledge)
+            }, grade);
+        }
+
+        if (session.isFreeTier) {
+            await DatabaseService.markFreeTierExhausted();
+        }
+
+        const reportData = {
+            interviewId: session.interviewId,
+            context: session.context,
+            contextType: session.contextType,
+            topicName: session.topicName,
+            difficulty: session.difficulty,
+            questions: session.questions,
+            answers: session.answers,
+            scores: session.scores,
+            overallScore,
+            cumulativeScores
+        };
+        sessionStorage.setItem('interviewReport', JSON.stringify(reportData));
+
+        addMessage(
+            `Interview complete! You answered ${session.scores.length} questions.\n\n` +
+            `<a href="report.html">View your full report card →</a>`,
+            'complete'
+        );
+    } catch (error) {
+        showChatError(error, 'CHAT-END-001', 'chat.endSession');
     }
-
-    // Mark free tier as exhausted
-    if (session.isFreeTier) {
-        await DatabaseService.markFreeTierExhausted();
-    }
-
-    // Store session data for report page (sessionStorage for quick access)
-    const reportData = {
-        interviewId: session.interviewId,
-        context: session.context,
-        contextType: session.contextType,
-        topicName: session.topicName,
-        difficulty: session.difficulty,
-        questions: session.questions,
-        answers: session.answers,
-        scores: session.scores,
-        overallScore,
-        cumulativeScores
-    };
-    sessionStorage.setItem('interviewReport', JSON.stringify(reportData));
-
-    addMessage(
-        `Interview complete! You answered ${session.scores.length} questions.\n\n` +
-        `<a href="report.html">View your full report card →</a>`,
-        'complete'
-    );
 }
 
 function addMessage(text, type) {
@@ -298,7 +312,7 @@ async function reloadCurrentQuestion() {
         document.getElementById('answerInput').focus();
     } catch (err) {
         removeTyping();
-        addMessage(`Error: ${err.message}. Please check your API key and try again.`, 'error');
+        showChatError(err, 'CHAT-QUESTION-RELOAD-001', 'chat.reloadCurrentQuestion');
         setInputEnabled(false);
     } finally {
         session.isProcessing = false;
@@ -338,7 +352,12 @@ async function loadKeywords(jobDescription) {
             loadingEl.textContent = 'No keywords found';
             loadingEl.style.display = '';
         }
-    } catch {
+    } catch (error) {
+        ErrorHandler.capture(error, {
+            internalCode: 'CHAT-KEYWORDS-001',
+            context: 'chat.loadKeywords',
+            publicPrefix: 'CHAT'
+        });
         loadingEl.textContent = 'Could not extract keywords';
     }
 }
@@ -460,6 +479,10 @@ function initInactivityDetection() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    initChat();
-    initInactivityDetection();
+    try {
+        initChat();
+        initInactivityDetection();
+    } catch (error) {
+        showChatError(error, 'CHAT-BOOTSTRAP-001', 'chat.DOMContentLoaded');
+    }
 });

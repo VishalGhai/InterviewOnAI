@@ -1,19 +1,49 @@
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-async function callGemini(contents) {
-    const response = await fetch(GEMINI_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents })
+function geminiThrow(error, internalCode, context, extra) {
+    const details = ErrorHandler.capture(error, {
+        internalCode,
+        context,
+        extra,
+        publicPrefix: 'AI'
     });
+    const wrapped = new Error(`${internalCode}:${details.publicCode}`);
+    wrapped.internalCode = internalCode;
+    wrapped.publicCode = details.publicCode;
+    throw wrapped;
+}
 
-    if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error?.message || `API error: ${response.status}`);
+async function callGemini(contents) {
+    try {
+        const response = await fetch(GEMINI_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents })
+        });
+
+        if (!response.ok) {
+            let payload = {};
+            try {
+                payload = await response.json();
+            } catch (parseError) {
+                ErrorHandler.capture(parseError, {
+                    internalCode: 'AI-RESP-PARSE-001',
+                    context: 'gemini.callGemini.errorPayload'
+                });
+            }
+            geminiThrow(
+                new Error(payload.error?.message || `Gemini status ${response.status}`),
+                'AI-HTTP-001',
+                'gemini.callGemini.http',
+                { status: response.status }
+            );
+        }
+
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } catch (error) {
+        geminiThrow(error, 'AI-CALL-001', 'gemini.callGemini');
     }
-
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 function buildQuestionPrompt(context, difficulty, questionNumber, totalQuestions) {

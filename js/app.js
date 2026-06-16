@@ -22,12 +22,25 @@ const TIER_DISPLAY = {
     '20': '₹199',
 };
 
+function showAppError(error, internalCode, context, presenter) {
+    return ErrorHandler.surface(error, {
+        internalCode,
+        context,
+        publicPrefix: 'APP',
+        presenter
+    });
+}
+
 async function init() {
-    checkApiKey();
-    await checkFreeTierStatus();
-    renderTopics();
-    document.getElementById('startBtn').addEventListener('click', handleStart);
-    setupDynamicButtonText();
+    try {
+        checkApiKey();
+        await checkFreeTierStatus();
+        renderTopics();
+        document.getElementById('startBtn').addEventListener('click', handleStart);
+        setupDynamicButtonText();
+    } catch (error) {
+        showAppError(error, 'APP-INIT-001', 'app.init');
+    }
 }
 
 function setupDynamicButtonText() {
@@ -45,16 +58,19 @@ function setupDynamicButtonText() {
 }
 
 async function checkFreeTierStatus() {
-    const isExhausted = await DatabaseService.isFreeTierExhausted();
-    const questionSelect = document.getElementById('questionCount');
-    const freeOption = questionSelect.querySelector('option[value="free"]');
+    try {
+        const isExhausted = await DatabaseService.isFreeTierExhausted();
+        const questionSelect = document.getElementById('questionCount');
+        const freeOption = questionSelect.querySelector('option[value="free"]');
 
-    if (isExhausted && freeOption) {
-        freeOption.textContent = 'Free Tier (Used)';
-        freeOption.disabled = true;
-        // Select first available option
-        questionSelect.value = '5';
-        document.getElementById('startBtn').textContent = `Pay ${TIER_DISPLAY['5']} & Start Interview`;
+        if (isExhausted && freeOption) {
+            freeOption.textContent = 'Free Tier (Used)';
+            freeOption.disabled = true;
+            questionSelect.value = '5';
+            document.getElementById('startBtn').textContent = `Pay ${TIER_DISPLAY['5']} & Start Interview`;
+        }
+    } catch (error) {
+        showAppError(error, 'APP-FREE-TIER-001', 'app.checkFreeTierStatus');
     }
 }
 
@@ -64,28 +80,36 @@ function checkApiKey() {
     const saveBtn = document.getElementById('apikeySaveBtn');
 
     // Check if a valid key exists (from localStorage or injected config.js)
-    if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE') {
-        overlay.style.display = 'none';
-        return;
-    }
-
-    overlay.style.display = 'flex';
-
-    saveBtn.addEventListener('click', () => {
-        const val = input.value.trim();
-        if (!val) {
-            input.style.borderColor = '#ef4444';
-            setTimeout(() => input.style.borderColor = '', 1500);
+    try {
+        if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE') {
+            overlay.style.display = 'none';
             return;
         }
-        localStorage.setItem('gemini-api-key', val);
-        overlay.style.display = 'none';
-        window.location.reload();
-    });
 
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') saveBtn.click();
-    });
+        overlay.style.display = 'flex';
+
+        saveBtn.addEventListener('click', () => {
+            try {
+                const val = input.value.trim();
+                if (!val) {
+                    input.style.borderColor = '#ef4444';
+                    setTimeout(() => input.style.borderColor = '', 1500);
+                    return;
+                }
+                localStorage.setItem('gemini-api-key', val);
+                overlay.style.display = 'none';
+                window.location.reload();
+            } catch (error) {
+                showAppError(error, 'APP-APIKEY-SAVE-001', 'app.checkApiKey.save');
+            }
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') saveBtn.click();
+        });
+    } catch (error) {
+        showAppError(error, 'APP-APIKEY-INIT-001', 'app.checkApiKey');
+    }
 }
 
 function renderTopics() {
@@ -102,16 +126,21 @@ function renderTopics() {
 }
 
 async function getQuestionCount() {
-    const val = document.getElementById('questionCount').value;
-    if (val === 'free') {
-        const isExhausted = await DatabaseService.isFreeTierExhausted();
-        if (isExhausted) {
-            alert('Your free tier has been used. Please select a question count.');
-            return null;
+    try {
+        const val = document.getElementById('questionCount').value;
+        if (val === 'free') {
+            const isExhausted = await DatabaseService.isFreeTierExhausted();
+            if (isExhausted) {
+                showAppError(new Error('Free tier exhausted'), 'APP-FREE-TIER-002', 'app.getQuestionCount');
+                return null;
+            }
+            return FREE_TIER_QUESTION_COUNT;
         }
-        return FREE_TIER_QUESTION_COUNT;
+        return parseInt(val);
+    } catch (error) {
+        showAppError(error, 'APP-QUESTION-COUNT-001', 'app.getQuestionCount');
+        return null;
     }
-    return parseInt(val);
 }
 
 function isFreeTierSelected() {
@@ -119,44 +148,52 @@ function isFreeTierSelected() {
 }
 
 async function handleStart() {
-    const jd = document.getElementById('jdInput').value.trim();
-    if (!jd) {
-        document.getElementById('jdInput').focus();
-        document.getElementById('jdInput').style.borderColor = '#ef4444';
-        setTimeout(() => {
-            document.getElementById('jdInput').style.borderColor = '';
-        }, 2000);
-        return;
+    try {
+        const jd = document.getElementById('jdInput').value.trim();
+        if (!jd) {
+            document.getElementById('jdInput').focus();
+            document.getElementById('jdInput').style.borderColor = '#ef4444';
+            setTimeout(() => {
+                document.getElementById('jdInput').style.borderColor = '';
+            }, 2000);
+            return;
+        }
+
+        const questionCount = await getQuestionCount();
+        if (!questionCount) return;
+
+        const config = {
+            context: jd,
+            contextType: 'jd',
+            questionCount,
+            difficulty: document.getElementById('difficulty').value,
+            isFreeTier: isFreeTierSelected()
+        };
+
+        await processPayment(config);
+    } catch (error) {
+        showAppError(error, 'APP-START-001', 'app.handleStart');
     }
-
-    const questionCount = await getQuestionCount();
-    if (!questionCount) return;
-
-    const config = {
-        context: jd,
-        contextType: 'jd',
-        questionCount,
-        difficulty: document.getElementById('difficulty').value,
-        isFreeTier: isFreeTierSelected()
-    };
-
-    await processPayment(config);
 }
 
 async function handleTopicClick(topic) {
-    const topicVal = document.getElementById('topicQuestionCount').value;
-    const questionCount = parseInt(topicVal);
+    try {
+        const topicVal = document.getElementById('topicQuestionCount').value;
+        const questionCount = parseInt(topicVal);
 
-    const config = {
-        context: `${topic} technical interview. Focus on core concepts, best practices, common interview questions, and real-world scenarios for ${topic}.`,
-        contextType: 'topic',
-        topicName: topic,
-        questionCount,
-        difficulty: document.getElementById('difficulty').value,
-        isFreeTier: false
-    };
+        const config = {
+            context: `${topic} technical interview. Focus on core concepts, best practices, common interview questions, and real-world scenarios for ${topic}.`,
+            contextType: 'topic',
+            topicName: topic,
+            questionCount,
+            difficulty: document.getElementById('difficulty').value,
+            isFreeTier: false
+        };
 
-    await processPayment(config);
+        await processPayment(config);
+    } catch (error) {
+        showAppError(error, 'APP-TOPIC-START-001', 'app.handleTopicClick');
+    }
 }
 
 async function processPayment(config) {
@@ -170,7 +207,7 @@ async function processPayment(config) {
     const tier = String(config.questionCount);
     const amount = TIER_PRICING[tier];
     if (!amount) {
-        alert('Invalid tier selected.');
+        showAppError(new Error('Invalid tier selected'), 'APP-TIER-VALIDATION-001', 'app.processPayment.validateTier');
         return;
     }
 
@@ -221,13 +258,12 @@ async function processPayment(config) {
                         sessionStorage.setItem('interviewConfig', JSON.stringify(config));
                         window.location.href = 'chat.html';
                     } else {
-                        alert('Payment verification failed. Please try again.');
+                        showAppError(new Error('Payment verification failed'), 'APP-PAYMENT-VERIFY-001', 'app.processPayment.verifyResult');
                         startBtn.disabled = false;
                         startBtn.textContent = originalText;
                     }
                 } catch (err) {
-                    console.error('Payment verification error:', err);
-                    alert('Payment verification failed. Please contact support.');
+                    showAppError(err, 'APP-PAYMENT-VERIFY-002', 'app.processPayment.verifyHandler');
                     startBtn.disabled = false;
                     startBtn.textContent = originalText;
                 }
@@ -242,16 +278,14 @@ async function processPayment(config) {
 
         const rzp = new Razorpay(options);
         rzp.on('payment.failed', function (response) {
-            console.error('Payment failed:', response.error);
-            alert(`Payment failed: ${response.error.description}`);
+            showAppError(response.error || new Error('Payment failed'), 'APP-PAYMENT-FAILED-001', 'app.processPayment.paymentFailed', () => null);
             startBtn.disabled = false;
             startBtn.textContent = originalText;
         });
         rzp.open();
 
     } catch (err) {
-        console.error('Order creation error:', err);
-        alert('Failed to create payment order. Please try again.');
+        showAppError(err, 'APP-PAYMENT-ORDER-001', 'app.processPayment');
         startBtn.disabled = false;
         startBtn.textContent = originalText;
     }

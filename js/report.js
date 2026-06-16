@@ -9,29 +9,38 @@ const PARAM_NAMES = {
 const PARAMS_ORDER = ['accuracy', 'depth', 'clarity', 'relevance', 'practicalKnowledge'];
 
 async function initReport() {
-    // Try sessionStorage first (just-completed interview)
-    const dataStr = sessionStorage.getItem('interviewReport');
-    if (dataStr) {
-        const data = JSON.parse(dataStr);
-        renderReport(data);
-        return;
-    }
-
-    // Try loading from DB via URL param: ?id=<interviewId>
-    const urlParams = new URLSearchParams(window.location.search);
-    const interviewId = urlParams.get('id');
-
-    if (interviewId) {
-        const interview = await DatabaseService.getInterview(interviewId);
-        if (interview) {
-            const dbData = mapInterviewToReportData(interview);
-            renderReport(dbData);
+    try {
+        const dataStr = sessionStorage.getItem('interviewReport');
+        if (dataStr) {
+            const data = JSON.parse(dataStr);
+            renderReport(data);
             return;
         }
-    }
 
-    // No data found
-    window.location.href = 'index.html';
+        const urlParams = new URLSearchParams(window.location.search);
+        const interviewId = urlParams.get('id');
+
+        if (interviewId) {
+            const interview = await DatabaseService.getInterview(interviewId);
+            if (interview) {
+                const dbData = mapInterviewToReportData(interview);
+                renderReport(dbData);
+                return;
+            }
+        }
+
+        window.location.href = 'index.html';
+    } catch (error) {
+        ErrorHandler.surface(error, {
+            internalCode: 'REPORT-INIT-001',
+            context: 'report.initReport',
+            publicPrefix: 'RPT',
+            presenter: (message) => {
+                const subtitle = document.getElementById('reportSubtitle');
+                if (subtitle) subtitle.textContent = message;
+            }
+        });
+    }
 }
 
 function mapInterviewToReportData(interview) {

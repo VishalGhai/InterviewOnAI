@@ -7,20 +7,26 @@ const THEMES = [
 ];
 
 function initTheme() {
-    const savedDark = localStorage.getItem('theme-dark');
-    const savedColor = localStorage.getItem('theme-color');
+    try {
+        const savedDark = localStorage.getItem('theme-dark');
+        const savedColor = localStorage.getItem('theme-color');
 
-    // Apply dark mode
-    if (savedDark === 'true' || (savedDark === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
+        if (savedDark === 'true' || (savedDark === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        if (savedColor !== null) {
+            applyAccentColor(parseInt(savedColor));
+        }
+
+        renderThemeToolbar();
+    } catch (error) {
+        ErrorHandler.capture(error, {
+            internalCode: 'THEME-INIT-001',
+            context: 'theme.initTheme',
+            publicPrefix: 'THEME'
+        });
     }
-
-    // Apply accent color
-    if (savedColor !== null) {
-        applyAccentColor(parseInt(savedColor));
-    }
-
-    renderThemeToolbar();
 }
 
 function renderThemeToolbar() {
