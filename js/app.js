@@ -33,7 +33,6 @@ function showAppError(error, internalCode, context, presenter) {
 
 async function init() {
     try {
-        checkApiKey();
         await checkFreeTierStatus();
         renderTopics();
         document.getElementById('startBtn').addEventListener('click', handleStart);
@@ -74,43 +73,6 @@ async function checkFreeTierStatus() {
     }
 }
 
-function checkApiKey() {
-    const overlay = document.getElementById('apikeyOverlay');
-    const input = document.getElementById('apikeyInput');
-    const saveBtn = document.getElementById('apikeySaveBtn');
-
-    // Check if a valid key exists (from localStorage or injected config.js)
-    try {
-        if (typeof GEMINI_API_KEY !== 'undefined' && GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE') {
-            overlay.style.display = 'none';
-            return;
-        }
-
-        overlay.style.display = 'flex';
-
-        saveBtn.addEventListener('click', () => {
-            try {
-                const val = input.value.trim();
-                if (!val) {
-                    input.style.borderColor = '#ef4444';
-                    setTimeout(() => input.style.borderColor = '', 1500);
-                    return;
-                }
-                localStorage.setItem('gemini-api-key', val);
-                overlay.style.display = 'none';
-                window.location.reload();
-            } catch (error) {
-                showAppError(error, 'APP-APIKEY-SAVE-001', 'app.checkApiKey.save');
-            }
-        });
-
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') saveBtn.click();
-        });
-    } catch (error) {
-        showAppError(error, 'APP-APIKEY-INIT-001', 'app.checkApiKey');
-    }
-}
 
 function renderTopics() {
     const grid = document.getElementById('topicsGrid');
