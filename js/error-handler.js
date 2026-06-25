@@ -28,11 +28,7 @@
         const publicCode = options.publicCode || generateCode(options.publicPrefix || 'ERR');
         const context = options.context || 'application';
 
-        console.error('[APP_ERROR]', {
-            internalCode,
-            publicCode,
-            context,
-            message: err.message,
+        console.error(`[APP_ERROR] ${internalCode} (${publicCode}) @ ${context}: ${err.message}`, {
             stack: err.stack,
             extra: options.extra || null,
         });
