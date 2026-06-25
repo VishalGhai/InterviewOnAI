@@ -23,6 +23,7 @@
 
     window.AuthManager = {
         async isLoggedIn() {
+            if (!REQUIRE_LOGIN) return true;
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 return !!session;
@@ -37,6 +38,7 @@
         },
 
         async getUser() {
+            if (!REQUIRE_LOGIN) return { email: TEST_EMAIL, user_metadata: { full_name: TEST_EMAIL.split('@')[0] } };
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 return user;
@@ -51,6 +53,7 @@
         },
 
         async getUsername() {
+            if (!REQUIRE_LOGIN) return TEST_EMAIL.split('@')[0];
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 if (!user) return '';
@@ -69,6 +72,7 @@
         },
 
         async getAvatarUrl() {
+            if (!REQUIRE_LOGIN) return null;
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 return user?.user_metadata?.avatar_url || null;
@@ -83,6 +87,10 @@
         },
 
         async logout() {
+            if (!REQUIRE_LOGIN) {
+                window.location.href = 'index.html';
+                return;
+            }
             try {
                 await supabaseClient.auth.signOut();
                 window.location.href = 'login.html';
@@ -92,6 +100,7 @@
         },
 
         async requireAuth() {
+            if (!REQUIRE_LOGIN) return true;
             const loggedIn = await this.isLoggedIn();
             if (!loggedIn) {
                 window.location.href = 'login.html';
@@ -155,6 +164,12 @@
 
     // Only run login logic on login.html
     if (!googleBtn) return;
+
+    // Bypass login page entirely when flag is off
+    if (!REQUIRE_LOGIN) {
+        window.location.href = 'index.html';
+        return;
+    }
 
     // If already logged in, redirect to index
     (async () => {
