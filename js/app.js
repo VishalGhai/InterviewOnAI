@@ -1,3 +1,5 @@
+const RAZORPAY_KEY_ID = 'rzp_test_Spyzkhtdr5AwSH';
+
 const TOPICS = [
     'Java', 'Python', 'JavaScript', 'TypeScript', 'SQL',
     'Spring Boot', 'React', 'Angular', 'Node.js', 'AWS',
