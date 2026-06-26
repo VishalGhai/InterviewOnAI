@@ -1,7 +1,3 @@
-const _INJECTED_GEMINI_KEY = "YOUR_GEMINI_API_KEY_HERE";
-const GEMINI_API_KEY = localStorage.getItem('gemini-api-key')
-    || (_INJECTED_GEMINI_KEY !== "YOUR_GEMINI_API_KEY_HERE" ? _INJECTED_GEMINI_KEY : '');
-
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 function geminiThrow(error, internalCode, context, extra) {
