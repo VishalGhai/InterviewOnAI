@@ -416,6 +416,8 @@ function showExitPrompt(reason) {
 
     const reasonMsg = reason === 'tab-switch'
         ? `It looks like you switched away from the interview.`
+        : reason === 'back-button'
+        ? `Going somewhere? Your interview is still in progress.`
         : `You've been inactive for a while.`;
 
     const modal = document.createElement('div');
@@ -465,6 +467,15 @@ function initInactivityDetection() {
             showExitPrompt('tab-switch');
         } else {
             resetInactivityTimer();
+        }
+    });
+
+    // Back button — push a state so popstate fires instead of navigating away
+    history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', () => {
+        if (!isSessionComplete()) {
+            history.pushState(null, '', window.location.href);
+            showExitPrompt('back-button');
         }
     });
 
