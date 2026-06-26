@@ -470,7 +470,7 @@ function initInactivityDetection() {
         }
     });
 
-    // Back button — push a state so popstate fires instead of navigating away
+    // Back button (browser) — push a state so popstate fires instead of navigating away
     history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', () => {
         if (!isSessionComplete()) {
@@ -478,6 +478,17 @@ function initInactivityDetection() {
             showExitPrompt('back-button');
         }
     });
+
+    // Back link in header — intercept click
+    const backLink = document.querySelector('.back-btn');
+    if (backLink) {
+        backLink.addEventListener('click', (e) => {
+            if (!isSessionComplete()) {
+                e.preventDefault();
+                showExitPrompt('back-button');
+            }
+        });
+    }
 
     // Browser/tab close
     window.addEventListener('beforeunload', (e) => {
