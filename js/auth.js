@@ -1,7 +1,7 @@
 /* Auth Module — Google OAuth via Supabase */
 
 // Set to false to skip login and use TEST_EMAIL as the authenticated user
-const REQUIRE_LOGIN = false;
+const REQUIRE_LOGIN = true;
 const TEST_EMAIL = 'test@interviewonai.com';
 
 (function () {
