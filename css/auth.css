@@ -142,12 +142,21 @@
 .user-badge {
     position: fixed;
     top: 1rem;
-    left: 1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     z-index: 900;
     animation: fadeIn 0.8s ease-out 0.6s both;
+}
+
+.user-badge-left {
+    left: 1rem;
+    right: auto;
+}
+
+.user-badge-right {
+    right: 1rem;
+    left: auto;
 }
 
 .history-toggle {
@@ -225,9 +234,14 @@
 
 /* Responsive */
 @media (max-width: 640px) {
-    .user-badge {
+    .user-badge-left {
         top: 0.5rem;
         left: 0.5rem;
+    }
+
+    .user-badge-right {
+        top: 0.5rem;
+        right: 0.5rem;
     }
 
     .user-name {

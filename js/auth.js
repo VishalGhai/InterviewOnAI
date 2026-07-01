@@ -151,10 +151,18 @@ const TEST_EMAIL = 'test@interviewonai.com';
                 badge.innerHTML = `
                     ${avatarHtml}
                     <span class="user-name">${username}</span>
+                `;
+                badge.className = 'user-badge user-badge-left';
+
+                const badgeRight = document.createElement('div');
+                badgeRight.className = 'user-badge user-badge-right';
+                badgeRight.innerHTML = `
                     ${historyBtn}
                     <button class="logout-btn" id="logoutBtn">Logout</button>
                 `;
+
                 document.body.appendChild(badge);
+                document.body.appendChild(badgeRight);
                 document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
             } catch (error) {
                 showAuthError(error, 'AUTH-BADGE-001');

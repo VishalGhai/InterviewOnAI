@@ -6,9 +6,9 @@
     <title>InterviewOnAI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/auth.css?v=11">
+    <link rel="stylesheet" href="css/auth.css?v=12">
 </head>
 <body>
     <!-- History Sidebar -->
@@ -26,7 +26,12 @@
     <div class="container">
         <header class="header">
             <h1>InterviewOn<span class="accent">AI</span></h1>
-            <p class="subtitle">AI-powered interview preparation</p>
+            <div class="role-headline">
+                <span class="role-headline-static">Ace your next interview as a</span>
+                <div class="role-cycler-wrap">
+                    <span class="role-cycler" id="roleCycler"></span>
+                </div>
+            </div>
         </header>
 
         <main class="landing">
@@ -101,6 +106,38 @@
         })();
     </script>
     <script src="js/theme.js?v=12"></script>
+    <script>
+    (function () {
+        const roles = [
+            'Software Engineer',
+            'Senior Software Engineer',
+            'Full Stack Developer',
+            'Frontend Developer',
+            'Backend Developer',
+            'DevOps Engineer',
+            'Data Engineer',
+            'ML Engineer',
+            'Engineering Manager',
+            'Tech Lead'
+        ];
+        let idx = 0;
+        const el = document.getElementById('roleCycler');
+        if (!el) return;
+        function showNext() {
+            el.classList.remove('role-in');
+            el.classList.add('role-out');
+            setTimeout(() => {
+                idx = (idx + 1) % roles.length;
+                el.textContent = roles[idx];
+                el.classList.remove('role-out');
+                el.classList.add('role-in');
+            }, 350);
+        }
+        el.textContent = roles[0];
+        el.classList.add('role-in');
+        setInterval(showNext, 2000);
+    })();
+    </script>
     <script src="config.js"></script>
     <script src="js/app.js?v=12"></script>
     <script src="js/history.js?v=11"></script>

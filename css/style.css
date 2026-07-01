@@ -85,6 +85,7 @@ body::after {
 /* Floating decorative shapes */
 .container, .chat-layout, .report-container {
     position: relative;
+    overflow: visible;
 }
 
 .container {
@@ -119,6 +120,7 @@ body::after {
     text-align: center;
     margin-bottom: 3rem;
     animation: fadeInUp 0.6s ease-out 0.1s both;
+    overflow: visible;
 }
 
 .header h1 {
@@ -149,6 +151,69 @@ body::after {
     font-size: 1rem;
     margin-top: 0.4rem;
     letter-spacing: 0.3px;
+}
+
+.role-headline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.18em;
+    margin-top: 0.75rem;
+    line-height: 1.2;
+    overflow: visible;
+}
+
+.role-headline-static {
+    font-size: clamp(1.1rem, 2.8vw, 1.45rem);
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+}
+
+.role-cycler-wrap {
+    /* allow the glow/shadow to be visible by removing strict clipping
+       keep a comfortable vertical rhythm with padding and min-height */
+    min-height: clamp(3rem, 6vw, 4.4rem);
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 0.6rem;
+    line-height: 1;
+}
+
+.role-cycler {
+    display: block;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: clamp(1.65rem, 4vw, 2.6rem);
+    color: var(--accent);
+    /* keep strong glow but reduce risk of extreme clipping */
+    text-shadow: 0 0 30px var(--accent-glow);
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: none;
+    line-height: 1;
+}
+
+.role-cycler.role-in {
+    animation: roleSlideIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.role-cycler.role-out {
+    animation: roleSlideOut 0.32s cubic-bezier(0.55, 0, 0.45, 1) forwards;
+}
+
+@keyframes roleSlideIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes roleSlideOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-18px); }
 }
 
 /* JD Section */
